@@ -56,7 +56,7 @@ export function DecisionWorkspacePanel({ project, role, onAction, onAsk, onViewS
   };
   return <div className="decision-workspace">
     <section className="decision-resolution" aria-labelledby="decision-resolution-title">
-      <div className="ic-overview-section-heading"><h2 id="decision-resolution-title">投决结论</h2><span className="ic-question-status">{decisionResultLabels[data.result]}</span></div>
+      <div className="ic-overview-section-heading"><h2 id="decision-resolution-title">投决结论</h2></div>
       <div className="decision-baseline-card">
         <div><strong>{getDecisionExecutionSummary(data)}</strong></div>
         <button type="button" className="ic-overview-button" onClick={(event) => { trigger.current = event.currentTarget; setResolutionOpen(true); }}>查看决议 <AppIcon icon={IconArrowRight} size={12} /></button>
