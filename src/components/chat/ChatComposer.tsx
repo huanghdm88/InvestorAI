@@ -279,7 +279,7 @@ export function ChatComposer({
 
   useEffect(() => {
     if (!questionContext) return;
-    const frame = window.requestAnimationFrame(() => taRef.current?.focus());
+    const frame = window.requestAnimationFrame(() => taRef.current?.focus({ preventScroll: true }));
     return () => window.cancelAnimationFrame(frame);
   }, [questionContext?.questionId]);
 
@@ -595,7 +595,7 @@ export function ChatComposer({
           </section>
         )}
 
-        {questionContext && <div className="px-3 pt-3 pb-1">
+        {questionContext && <div key={`${questionContext.projectId}:${questionContext.questionId}`} className="composer-reference-attachment-in px-3 pt-3 pb-1" aria-label="已附加关注事件">
           <QuestionContextCard context={questionContext} onRemove={onRemoveQuestionContext ? () => {
             onRemoveQuestionContext();
             window.requestAnimationFrame(() => taRef.current?.focus());

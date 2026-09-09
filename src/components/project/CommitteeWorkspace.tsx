@@ -36,6 +36,8 @@ import {
   IconPlus,
   IconSearch,
   IconSettings,
+  IconSidebarCollapse,
+  IconSidebarExpand,
   IconDownload,
   IconUser,
 } from "@/src/lib/icons";
@@ -119,6 +121,8 @@ const projectStatusLabels: Record<Project["status"], string> = {
   failed: "资料处理失败",
 };
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "invest-wise.committee-sidebar-collapsed";
+
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "日期未提供";
@@ -177,6 +181,14 @@ export function CommitteeWorkspace({
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [composerOpen, setComposerOpen] = useState(isManager);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
   const lastActivationRef = useRef(assistantActivationKey);
   const [reportDrafts, setReportDrafts] = useState<Record<string, ManagerReportDraft>>({});
   const draftKey = `${project.id}:${project.lifecycleStage === "decided" ? "decided" : "diligence"}`;
@@ -199,6 +211,14 @@ export function CommitteeWorkspace({
     setSettingsVisible(false);
     setMobileNavigationOpen(false);
   }, [projectHomeActivationKey]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(sidebarCollapsed));
+    } catch {
+      // Navigation still works when browser storage is unavailable.
+    }
+  }, [sidebarCollapsed]);
 
   const listedConversations = useMemo(
     () => conversations
@@ -236,6 +256,26 @@ export function CommitteeWorkspace({
     const observer = new ResizeObserver(measure);
     observer.observe(composerRef.current);
     return () => observer.disconnect();
+  }, [composerOpen, isDirectory]);
+
+  useEffect(() => {
+    if (isDirectory || !composerRef.current) return;
+    const root = document.documentElement;
+    const updateDockSpace = () => {
+      const dock = composerOpen ? composerRef.current : assistantTriggerRef.current;
+      if (!dock) return;
+      const bottom = parseFloat(getComputedStyle(composerOpen ? dock : dock.closest(".composer-launcher-position")!).bottom) || 20;
+      root.style.setProperty("--project-assistant-height", `${dock.offsetHeight + bottom + 12}px`);
+    };
+    updateDockSpace();
+    const observer = new ResizeObserver(updateDockSpace);
+    observer.observe(composerRef.current);
+    window.addEventListener("resize", updateDockSpace);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateDockSpace);
+      root.style.removeProperty("--project-assistant-height");
+    };
   }, [composerOpen, isDirectory]);
 
   useEffect(() => {
@@ -349,26 +389,41 @@ export function CommitteeWorkspace({
 
   const renderNavigation = () => (
     <>
-      <button className="ic-shell-back" type="button" onClick={() => navigate("projects")}>
-        <AppIcon icon={IconChevronLeft} size={12} />
-        所有项目
-      </button>
+      <div className="ic-shell-sidebar-heading">
+        <button className="ic-shell-back" type="button" onClick={() => navigate("projects")} aria-label="所有项目" title="所有项目">
+          <AppIcon icon={IconChevronLeft} size={12} />
+          <span className="ic-shell-sidebar-label">所有项目</span>
+        </button>
+        <button
+          type="button"
+          className="ic-shell-sidebar-toggle"
+          aria-label={sidebarCollapsed ? "展开项目导航" : "折叠项目导航"}
+          title={sidebarCollapsed ? "展开项目导航" : "折叠项目导航"}
+          aria-expanded={!sidebarCollapsed}
+          aria-controls="project-sidebar-navigation"
+          onClick={() => setSidebarCollapsed((value) => !value)}
+        >
+          <AppIcon icon={sidebarCollapsed ? IconSidebarExpand : IconSidebarCollapse} size={14} />
+        </button>
+      </div>
       <nav className="ic-shell-navigation" aria-label="项目导航">
         {navigation.map((item) => (
           <button
             key={item.id}
             type="button"
             aria-current={!historyOpen && !conversationOpen && !openReport && section === item.id ? "page" : undefined}
+            aria-label={item.label}
+            title={item.label}
             onClick={() => navigate(item.id)}
           >
             <AppIcon icon={item.icon} size={15} />
-            {item.label}
+            <span className="ic-shell-sidebar-label">{item.label}</span>
           </button>
         ))}
-        <button type="button" aria-current={historyOpen ? "page" : undefined} onClick={() => { setHistoryOpen(true); setMobileNavigationOpen(false); onCloseConversation(true); onCloseReport?.(); }}><AppIcon icon={IconHistory} size={15} />历史对话</button>
+        <button type="button" aria-label="历史对话" title="历史对话" aria-current={historyOpen ? "page" : undefined} onClick={() => { setHistoryOpen(true); setMobileNavigationOpen(false); onCloseConversation(true); onCloseReport?.(); }}><AppIcon icon={IconHistory} size={15} /><span className="ic-shell-sidebar-label">历史对话</span></button>
       </nav>
       <div className="ic-shell-sidebar-bottom">
-        {isManager && <button type="button" className="manager-settings-trigger" onClick={() => setSettingsVisible(true)}><AppIcon icon={IconSettings} size={15} />项目设置与任务</button>}
+        {isManager && <button type="button" className="manager-settings-trigger" aria-label="项目设置与任务" title="项目设置与任务" onClick={() => setSettingsVisible(true)}><AppIcon icon={IconSettings} size={15} /><span className="ic-shell-sidebar-label">项目设置与任务</span></button>}
       </div>
     </>
   );
@@ -415,7 +470,7 @@ export function CommitteeWorkspace({
       </header>
 
       <div className={`ic-shell-body${isDirectory ? " ic-shell-body-directory" : ""}`}>
-        {!isDirectory && <aside className="ic-shell-sidebar">{renderNavigation()}</aside>}
+        {!isDirectory && <aside id="project-sidebar-navigation" className={`ic-shell-sidebar${sidebarCollapsed ? " is-collapsed" : ""}`}>{renderNavigation()}</aside>}
         <div ref={workareaRef} className={`ic-manager-workarea${composerPresent ? " has-floating-composer" : !isDirectory ? " has-composer-launcher" : ""}`}>
         {!isDirectory && conversationOpen && !historyOpen && !openReport ? <section className="ic-manager-conversation" aria-label="项目助手">
           <div className="ic-manager-conversation-heading"><button type="button" className="ic-shell-icon-button" aria-label="返回项目主页" onClick={() => navigate("overview")}><AppIcon icon={IconChevronLeft} size={14} /></button><h1>{activeConversation?.title || "项目助手"}</h1></div>
@@ -527,7 +582,7 @@ export function CommitteeWorkspace({
         </div>
       </div>
 
-      <Sheet open={mobileNavigationOpen} onOpenChange={setMobileNavigationOpen}>
+      <Sheet modal={false} open={mobileNavigationOpen} onOpenChange={setMobileNavigationOpen}>
         <SheetContent side="left" className="ic-shell-mobile-sidebar" onCloseAutoFocus={(event) => {
           event.preventDefault();
           const target = focusComposerAfterNavigation.current ? (composerRef.current?.inert ? null : composerRef.current?.querySelector("textarea")) : null;
@@ -541,7 +596,7 @@ export function CommitteeWorkspace({
         </SheetContent>
       </Sheet>
 
-      {isManager && <Sheet open={settingsVisible} onOpenChange={setSettingsVisible}><SheetContent className="w-[min(420px,100vw)] p-0"><SheetTitle className="sr-only">项目设置与任务</SheetTitle><SheetDescription className="sr-only">项目偏好、执行任务与人工跟进</SheetDescription>{settingsContent}</SheetContent></Sheet>}
+      {isManager && <Sheet modal={false} open={settingsVisible} onOpenChange={setSettingsVisible}><SheetContent className="w-[min(420px,100vw)] p-0"><SheetTitle className="sr-only">项目设置与任务</SheetTitle><SheetDescription className="sr-only">项目偏好、执行任务与人工跟进</SheetDescription>{settingsContent}</SheetContent></Sheet>}
     </div>
   );
 }

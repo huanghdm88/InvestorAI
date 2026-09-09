@@ -345,7 +345,7 @@ function App() {
 
   const [generating, setGenerating] = useState(false);
   const [composerReset, setComposerReset] = useState<{ conversationId: string; key: string } | null>(null);
-  const [managerHomeDrafts, setManagerHomeDrafts] = useState<Record<string, { text: string; attachments: MessageAttachment[] }>>({});
+  const [managerHomeDrafts, setManagerHomeDrafts] = useState<Record<string, { text: string; attachments: MessageAttachment[]; questionContext?: QuestionContext }>>({});
   const homeDraftKey = `${authSession?.role ?? "investment-director"}:${currentProjectId}`;
   const [managerReferenceFile, setManagerReferenceFile] = useState<KnowledgeFile | null>(null);
   const [assistantActivationKey, setAssistantActivationKey] = useState(0);
@@ -1258,10 +1258,13 @@ function App() {
   ) => {
     const projectId = currentProjectId;
     const trimmed = text.trim();
+    const homeQuestionContext = managerHomeDrafts[homeDraftKey]?.questionContext?.projectId === projectId
+      ? managerHomeDrafts[homeDraftKey]?.questionContext
+      : undefined;
     if (!trimmed && attachments.length === 0) return false;
 
     if (trimmed.length > 0) {
-      const intent = detectIntent(text);
+      const intent = homeQuestionContext ? "challenge" : detectIntent(text);
       if (
         intent !== "ambiguous" &&
         isProjectParsing(projectId)
@@ -1270,6 +1273,7 @@ function App() {
           id: uid("m"),
           role: "user",
           text,
+          questionContext: homeQuestionContext,
           attachments: attachments.length > 0 ? attachments : undefined,
           mode: intent,
           createdAt: new Date().toISOString(),
@@ -1278,7 +1282,7 @@ function App() {
           kind: intent,
           conversationId: null, // 「继续」时再 openOrCreateDraftFor
           projectId,
-          userQuery: text,
+          userQuery: buildQuestionFollowUp(text, homeQuestionContext),
           taskSnapshot: taskSnapshotFor(projectId),
           attachments,
           userMsg,
@@ -1291,13 +1295,13 @@ function App() {
     const conversationBusy =
       generating || runningTasks.some((task) => task.conversationId === convId);
     if (conversationBusy && (trimmed.length > 0 || attachments.length > 0)) {
-      enqueuePrompt(convId, text, attachments);
-      setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: "", attachments: [] } }));
+      enqueuePrompt(convId, text, attachments, homeQuestionContext);
+      setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: "", attachments: [], questionContext: undefined } }));
       return true;
     }
 
-    sendInConversation(convId, text, attachments);
-    setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: "", attachments: [] } }));
+    sendInConversation(convId, text, attachments, homeQuestionContext);
+    setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: "", attachments: [], questionContext: undefined } }));
     return true;
   };
 
@@ -1943,7 +1947,21 @@ function App() {
             }}
             onAsk={(context) => {
               if (context.projectId !== currentProjectId) return;
-              createEmptyConversationFor(currentProjectId, "", context);
+              if (currentConversationId) {
+                setConversations((previous) => previous.map((conversation) => conversation.id === currentConversationId
+                  ? { ...conversation, questionContext: context }
+                  : conversation));
+              } else {
+                setManagerHomeDrafts((previous) => ({
+                  ...previous,
+                  [homeDraftKey]: {
+                    text: previous[homeDraftKey]?.text ?? "",
+                    attachments: previous[homeDraftKey]?.attachments ?? [],
+                    questionContext: context,
+                  },
+                }));
+              }
+              setAssistantActivationKey((key) => key + 1);
             }}
             assistantContent={
                 <MessageList
@@ -1980,21 +1998,34 @@ function App() {
                   className="manager-composer"
                   allowProjectMaterials={authSession.role === "investment-director" && localizedCurrentProject.files.some((file) => file.status === "indexed")}
                   allowQueueWhileGenerating={authSession.role === "investment-director"}
-                  questionContext={currentConversation?.questionContext}
+                  questionContext={currentConversationId ? currentConversation?.questionContext : managerHomeDrafts[homeDraftKey]?.questionContext}
                   onViewSource={handleViewSource}
-                  onRemoveQuestionContext={() => setConversations((previous) => previous.map((item) =>
-                    item.id === currentConversationId ? { ...item, questionContext: undefined } : item
-                  ))}
+                  onRemoveQuestionContext={() => {
+                    if (currentConversationId) {
+                      setConversations((previous) => previous.map((item) =>
+                        item.id === currentConversationId ? { ...item, questionContext: undefined } : item
+                      ));
+                    } else {
+                      setManagerHomeDrafts((previous) => ({
+                        ...previous,
+                        [homeDraftKey]: {
+                          text: previous[homeDraftKey]?.text ?? "",
+                          attachments: previous[homeDraftKey]?.attachments ?? [],
+                          questionContext: undefined,
+                        },
+                      }));
+                    }
+                  }}
                   initialDraft={currentConversationId ? currentConversation?.draftText : managerHomeDrafts[homeDraftKey]?.text ?? ""}
                   initialAttachments={currentConversationId ? currentConversation?.draftAttachments : managerHomeDrafts[homeDraftKey]?.attachments}
                   referenceAttachment={authSession.role === "investment-director" ? managerReferenceFile : null}
                   onReferenceAttachmentConsumed={() => setManagerReferenceFile(null)}
                   onAttachmentsChange={(attachments) => {
                     if (currentConversationId) setConversations((previous) => previous.map((item) => item.id === currentConversationId ? { ...item, draftAttachments: attachments } : item));
-                    else setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: previous[homeDraftKey]?.text ?? "", attachments } }));
+                    else setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: previous[homeDraftKey]?.text ?? "", attachments, questionContext: previous[homeDraftKey]?.questionContext } }));
                   }}
                   resetKey={composerReset?.conversationId === currentConversationId ? composerReset.key : undefined}
-                  onDraftTextChange={currentConversationId ? handleCommitteeDraftTextChange : (text) => setManagerHomeDrafts((previous) => previous[homeDraftKey]?.text === text ? previous : ({ ...previous, [homeDraftKey]: { text, attachments: previous[homeDraftKey]?.attachments ?? [] } }))}
+                  onDraftTextChange={currentConversationId ? handleCommitteeDraftTextChange : (text) => setManagerHomeDrafts((previous) => previous[homeDraftKey]?.text === text ? previous : ({ ...previous, [homeDraftKey]: { text, attachments: previous[homeDraftKey]?.attachments ?? [], questionContext: previous[homeDraftKey]?.questionContext } }))}
                   draftStorageKey={`invest-wise:${authSession.role}-draft:${currentProjectId}:${currentConversationId ?? "new"}`}
                   showAttachmentDivider={false}
                   queuedPrompts={queuedPrompts.filter((prompt) => prompt.conversationId === currentConversationId)}

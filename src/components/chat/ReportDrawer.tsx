@@ -125,6 +125,7 @@ export function ReportDrawer({
 
   return (
     <Sheet
+      modal={false}
       open={open}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onClose();

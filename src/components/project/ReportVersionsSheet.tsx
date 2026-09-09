@@ -34,5 +34,5 @@ export function ReportVersionList({ project, selectedId, reports, onSelectSource
 }
 
 export function ReportVersionsSheet({ open, onOpenChange, ...props }: Parameters<typeof ReportVersionList>[0] & { open: boolean; onOpenChange: (open: boolean) => void }) {
-  return <Sheet open={open} onOpenChange={onOpenChange}><SheetContent className="manager-versions-sheet"><SheetTitle>历史版本</SheetTitle><SheetDescription className="sr-only">{props.project.name}</SheetDescription><ReportVersionList {...props} onOpenReport={(report) => { onOpenChange(false); props.onOpenReport(report); }} /></SheetContent></Sheet>;
+  return <Sheet modal={false} open={open} onOpenChange={onOpenChange}><SheetContent className="manager-versions-sheet"><SheetTitle>历史版本</SheetTitle><SheetDescription className="sr-only">{props.project.name}</SheetDescription><ReportVersionList {...props} onOpenReport={(report) => { onOpenChange(false); props.onOpenReport(report); }} /></SheetContent></Sheet>;
 }

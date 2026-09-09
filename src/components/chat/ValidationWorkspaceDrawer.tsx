@@ -1523,6 +1523,7 @@ export function ValidationWorkspaceDrawer({
 
   return (
     <Sheet
+      modal={false}
       open={open}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onClose();

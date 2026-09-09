@@ -74,7 +74,7 @@ try {
     assert.ok(floatingComposer);
     assert.equal(floatingComposer.includes('hidden=""'), role === "committee-lead");
     assert.equal(floatingComposer.includes('inert=""'), role === "committee-lead");
-    assert.equal((shell.match(/>历史对话<\/button>/g) ?? []).length, 1);
+    assert.equal((shell.match(/>历史对话<\/(?:button|span)>/g) ?? []).length, 1);
     for (const removedNote of ["ic-analysis-note", "ic-overview-basis", "ic-project-market-note", "ic-overview-other-note", "manager-review-note", "原文件全文预览尚未接入"]) {
       assert.ok(!shell.includes(removedNote), `${role}: remove supplementary copy without leaving its wrapper`);
     }

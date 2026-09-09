@@ -6,20 +6,32 @@ import { IconClose } from "@/src/lib/icons";
 import { useLocale } from "@/src/lib/i18n";
 import { cn } from "@/src/lib/utils";
 
-const Sheet = DialogPrimitive.Root;
+const SheetContext = React.createContext({ open: false, modal: true });
+
+function Sheet({ open, defaultOpen = false, onOpenChange, modal = true, children, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen);
+  const isOpen = open ?? uncontrolledOpen;
+  return <SheetContext.Provider value={{ open: isOpen, modal }}>
+    <DialogPrimitive.Root {...props} modal={modal} open={isOpen} onOpenChange={(value) => {
+      setUncontrolledOpen(value);
+      onOpenChange?.(value);
+    }}>{children}</DialogPrimitive.Root>
+  </SheetContext.Provider>;
+}
 const SheetTrigger = DialogPrimitive.Trigger;
 const SheetClose = DialogPrimitive.Close;
 const SheetPortal = DialogPrimitive.Portal;
 
-function SheetOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+function SheetOverlay({ ref }: React.ComponentPropsWithRef<"div">) {
+  const { open, modal } = React.useContext(SheetContext);
+  const className = "wz-sheet-overlay fixed inset-0 z-[var(--wz-z-overlay)] bg-[var(--wz-color-bg-overlay)]";
+  // Radix omits non-modal overlays; retain the backdrop for workspace drawers.
+  if (!modal) return <div ref={ref} data-slot="sheet-overlay" data-state={open ? "open" : "closed"} aria-hidden="true" className={className} />;
   return (
     <DialogPrimitive.Overlay
+      ref={ref}
       data-slot="sheet-overlay"
-      className={cn(
-        "wz-sheet-overlay fixed inset-0 z-[var(--wz-z-overlay)] bg-[var(--wz-color-bg-overlay)]",
-        className
-      )}
-      {...props}
+      className={className}
     />
   );
 }
@@ -29,24 +41,41 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  onInteractOutside,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   side?: "left" | "right";
   showCloseButton?: boolean;
 }) {
   const { t } = useLocale();
+  const { modal } = React.useContext(SheetContext);
+  const isWorkspaceLayerTarget = (target: EventTarget | null) => target instanceof Element
+    && Boolean(target.closest("#project-floating-composer, .composer-launcher-position, [data-slot=\"sheet-content\"]"));
   return (
     <SheetPortal>
       <SheetOverlay />
       <DialogPrimitive.Content
         data-slot="sheet-content"
         data-side={side}
+        data-workspace-sheet={!modal || undefined}
         className={cn(
           "wz-sheet-content fixed inset-y-0 z-[var(--wz-z-dialog)] flex h-dvh w-[min(640px,calc(100vw-16px))] flex-col overflow-hidden border-[var(--wz-color-border-subtle)] bg-[var(--wz-color-bg-elevated)] text-[var(--wz-color-text-primary)] shadow-[var(--wz-shadow-lg)] outline-none",
           side === "right" ? "right-0 border-l" : "left-0 border-r",
           className
         )}
         {...props}
+        onInteractOutside={(event) => {
+          if (!modal && isWorkspaceLayerTarget(event.detail.originalEvent.target)) {
+            event.preventDefault();
+            return;
+          }
+          onInteractOutside?.(event);
+        }}
+        onCloseAutoFocus={(event) => {
+          if (!modal && isWorkspaceLayerTarget(document.activeElement)) event.preventDefault();
+          onCloseAutoFocus?.(event);
+        }}
       >
         {children}
         {showCloseButton && (

@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { AppIcon } from "@/src/components/ui/app-icon";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/src/components/ui/sheet";
 import { getQuestionPathModel } from "@/src/data/question-paths";
@@ -83,8 +84,16 @@ export function QuestionReasoningDialog({ context, onClose, onViewSource, onAsk,
   onAsk: (context: QuestionContext) => void;
   returnFocusTo?: HTMLElement | null;
 }) {
-  return <Sheet open={context !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
+  const pendingAsk = useRef<QuestionContext | null>(null);
+  return <Sheet modal={false} open={context !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
     <SheetContent showCloseButton={false} className="ic-reasoning-dialog" onCloseAutoFocus={(event) => {
+      if (pendingAsk.current) {
+        event.preventDefault();
+        const next = pendingAsk.current;
+        pendingAsk.current = null;
+        onAsk(next);
+        return;
+      }
       if (returnFocusTo?.isConnected) { event.preventDefault(); returnFocusTo.focus(); }
     }}>
       {context && <>
@@ -93,7 +102,7 @@ export function QuestionReasoningDialog({ context, onClose, onViewSource, onAsk,
           <button type="button" className="ic-reasoning-close" aria-label="关闭推演过程" onClick={onClose}><AppIcon icon={IconClose} size={18} /></button>
         </header>
         <div className="ic-reasoning-scroll"><QuestionReasoningBody key={context.questionId} context={context} onViewSource={onViewSource} /></div>
-        <footer className="ic-reasoning-footer"><div><button type="button" onClick={onClose}>返回</button><button type="button" className="ic-reasoning-primary" onClick={() => { onClose(); onAsk(context); }}>就此追问 <AppIcon icon={IconArrowRight} size={13} /></button></div></footer>
+        <footer className="ic-reasoning-footer"><div><button type="button" onClick={onClose}>返回</button><button type="button" className="ic-reasoning-primary" onClick={() => { pendingAsk.current = context; onClose(); }}>就此追问 <AppIcon icon={IconArrowRight} size={13} /></button></div></footer>
       </>}
     </SheetContent>
   </Sheet>;
