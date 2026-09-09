@@ -1,0 +1,98 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { createServer } from "vite";
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+
+const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom" });
+try {
+  const { mockProjects } = await server.ssrLoadModule("/src/data/mock-projects.ts");
+  const { applyReportSubmission, reportFileError } = await server.ssrLoadModule("/src/lib/report-submission.ts");
+  const { restoreProjectWorkflow, selectProjectStage } = await server.ssrLoadModule("/src/lib/decision-workspace.ts");
+  const { getCurrentReportCandidates, getSelectedReportSource, resolveReportSource, getDiligenceReportReviews, getMaterialSignature } = await server.ssrLoadModule("/src/lib/report-review.ts");
+  const { localizeProject } = await server.ssrLoadModule("/src/lib/content-localization.ts");
+  const { ManagerReportPanel, createManagerReportDraft } = await server.ssrLoadModule("/src/components/project/ManagerReportPanel.tsx");
+  const { ReportVersionList } = await server.ssrLoadModule("/src/components/project/ReportVersionsSheet.tsx");
+  const { KnowledgePanel } = await server.ssrLoadModule("/src/components/layout/KnowledgePanel.tsx");
+  const { LocaleProvider } = await server.ssrLoadModule("/src/lib/i18n.tsx");
+  const { TooltipProvider } = await server.ssrLoadModule("/src/components/ui/tooltip.tsx");
+  const noop = () => {};
+  const render = (component, props) => renderToStaticMarkup(React.createElement(LocaleProvider, null, React.createElement(TooltipProvider, null, React.createElement(component, props))));
+  const project = { ...mockProjects.find((item) => item.id === "proj-aurora"), lifecycleStage: "diligence", currentLifecycleStage: "diligence", decision: undefined };
+  const initial = JSON.stringify(project);
+  const file = new File(["local metadata demo"], "新版材料.pdf", { type: "application/pdf" });
+  const request = { projectId: project.id, stage: "diligence", file, previousSourceId: project.files[0].id };
+  const result = applyReportSubmission(project, request, "investment-director", "new-report", "2026-09-08T10:00:00Z");
+  assert.equal(result.ok, true);
+  assert.equal(result.file.status, "unparsed");
+  assert.equal(result.file.category, "投决议案");
+  assert.equal(result.project.files.length, project.files.length + 1);
+  assert.deepEqual(result.project.files.slice(1), project.files);
+  assert.equal(getCurrentReportCandidates(result.project)[0].id, result.file.id, "No filename keyword required");
+  assert.equal(getSelectedReportSource(result.project, [], result.file.id).id, result.file.id);
+  const second = applyReportSubmission(result.project, request, "investment-director", "new-report-2", "2026-09-08T10:01:00Z");
+  assert.equal(second.ok, true, "Same filename is a new independent version");
+  assert.equal(second.project.reportSubmissions.length, 2);
+  assert.deepEqual(second.project.reportSubmissions[1], result.project.reportSubmissions[0]);
+  const olderSource = getSelectedReportSource(second.project, [], result.file.id);
+  assert.equal(resolveReportSource(second.project, [result.file], olderSource).id, result.file.id, "Selecting an older same-name, same-size report must preserve that exact version");
+  assert.equal(applyReportSubmission(result.project, request, "investment-director", "new-report", "2026-09-08").ok, false);
+  assert.equal(applyReportSubmission(project, request, "committee-lead", "x", "2026-09-08").ok, false);
+  assert.equal(applyReportSubmission(project, { ...request, projectId: "foreign" }, "investment-director", "x", "2026-09-08").ok, false);
+  assert.equal(applyReportSubmission(project, { ...request, stage: "decided" }, "investment-director", "x", "2026-09-08").ok, false);
+  assert.ok(reportFileError(new File([], "empty.pdf", { type: "application/pdf" })));
+  assert.ok(reportFileError(new File(["x"], "bad.exe", { type: "application/octet-stream" })));
+  assert.ok(reportFileError(new File(["x"], "bad.pdf", { type: "text/html" })));
+  assert.ok(reportFileError({ name: "big.pdf", size: 50 * 1024 * 1024 + 1, type: "application/pdf" }).includes("50 MB"));
+  assert.equal(reportFileError(new File(["x"], "议案.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" })), undefined);
+
+  const decided = restoreProjectWorkflow([{ ...project, lifecycleStage: "decided", currentLifecycleStage: "decided" }])[0];
+  const decisionBefore = JSON.stringify(decided.decision);
+  const supplement = applyReportSubmission(decided, { ...request, stage: "decided" }, "investment-director", "supplement", "2026-09-08T11:00:00Z");
+  assert.equal(supplement.ok, true);
+  assert.equal(JSON.stringify(supplement.project.decision), decisionBefore);
+  assert.equal(supplement.project.reportSubmissions[0].previousSourceId, decided.decision.approvedReport.id);
+  assert.ok(!getCurrentReportCandidates(supplement.project).some((entry) => entry.id === supplement.file.id));
+  assert.equal(resolveReportSource(selectProjectStage(supplement.project, "diligence")).id, project.files[0].id, "Supplement cannot silently become an original report");
+  assert.equal(getDiligenceReportReviews(supplement.project, []).length, 0);
+
+  const actions = { onDraftChange: noop, onDraftTask: noop, onViewSource: noop, onSubmitReport: () => result };
+  for (const candidate of [project, decided]) {
+    const html = render(ManagerReportPanel, { ...actions, project: candidate, draft: createManagerReportDraft(candidate) });
+    assert.ok(!html.includes(">提交新报告</button>") && !html.includes(">生成报告") && !html.includes(">模拟投委会</button>"));
+    assert.ok(!html.includes("报告要求") && html.includes("报告依据"));
+    assert.ok(!html.includes('aria-label="选择新的投资报告"'), "Current report no longer embeds a submission form");
+    assert.ok(!render(ManagerReportPanel, { ...actions, project: candidate, draft: createManagerReportDraft(candidate), readOnly: true }).includes("提交新报告"));
+  }
+  const submittedPanel = render(ManagerReportPanel, { ...actions, project: result.project, draft: { ...createManagerReportDraft(result.project), selectedId: result.file.id } });
+  assert.ok(submittedPanel.includes(file.name) && submittedPanel.includes("未解析") && !submittedPanel.includes("资料处理中"));
+  const supplementPanel = render(ManagerReportPanel, { ...actions, project: supplement.project, draft: createManagerReportDraft(supplement.project) });
+  assert.ok(supplementPanel.includes(decided.decision.approvedReport.name) && supplementPanel.includes("最新提交") && supplementPanel.includes(file.name));
+  const versions = render(ReportVersionList, { project: second.project, selectedId: second.file.id, reports: [], onSelectSource: noop, onOpenReport: noop });
+  assert.equal((versions.match(/新版材料.pdf/g) ?? []).length, 2, "No duplicated source/submission rows");
+  assert.ok(versions.includes("提交版本"));
+  assert.ok(versions.includes("提交报告 2") && versions.includes("提交报告 1"));
+  const removed = { ...supplement.project, files: supplement.project.files.filter((entry) => entry.id !== supplement.file.id) };
+  const history = render(ReportVersionList, { project: removed, selectedId: decided.decision.approvedReport.id, reports: [], locked: true, onSelectSource: noop, onOpenReport: noop });
+  assert.ok(history.includes(file.name) && history.includes("原文件已移除"));
+  assert.ok(!history.includes(">切换</button>"), "Approved baseline remains locked");
+  const removedDiligence = restoreProjectWorkflow([{ ...result.project, files: project.files, lifecycleStage: "decided", currentLifecycleStage: "decided" }])[0];
+  const crossStageHistory = render(ReportVersionList, { project: removedDiligence, selectedId: removedDiligence.decision.approvedReport.id, reports: [], locked: true, onSelectSource: noop, onOpenReport: noop });
+  assert.ok(crossStageHistory.includes(file.name) && crossStageHistory.includes("原文件已移除"), "Diligence submission snapshots survive stage changes and source removal");
+  assert.ok(!crossStageHistory.includes(">切换</button>"));
+  const translatedNameFile = new File(["local metadata demo"], "极光智算-投决议案-V3.pdf", { type: "application/pdf" });
+  const localizedSubmission = applyReportSubmission(project, { ...request, file: translatedNameFile }, "investment-director", "user-filename", "2026-09-08T12:00:00Z");
+  const localizedProject = localizeProject(localizedSubmission.project, "en-US");
+  assert.equal(localizedProject.files[0].name, translatedNameFile.name, "User filenames are not translated demo content");
+  assert.equal(localizedProject.files[0].name, localizedProject.reportSubmissions[0].file.name);
+  assert.equal(getMaterialSignature({ ...localizeProject(project, "en-US"), files: [localizedSubmission.file, ...localizeProject(project, "en-US").files] }), getMaterialSignature(localizedProject), "Submission must not introduce a false material-update warning in English");
+  assert.ok(render(KnowledgePanel, { files: [result.file], onUpdateFiles: noop }).includes("未解析"));
+  assert.equal(JSON.stringify(project), initial);
+
+  const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
+  assert.ok(app.includes("onSubmitReport={handleSubmitReport}") && app.includes("applyReportSubmission(item, request, authSession.role, id, at)"));
+  const button = await readFile(new URL("../src/components/project/SubmitReportButton.tsx", import.meta.url), "utf8");
+  assert.ok(button.includes('confirmLabel="确认提交"') && button.includes("if (!open) setPending(null)"));
+  assert.ok(!/fetch\(|setTimeout|indexed|startTask/.test(button), "Selecting or cancelling never starts parsing / analysis");
+  console.log("PASS: direct report submission; validation/cancel contract; same-name versions; diligence selection; immutable approved baseline; role/project/stage guards; unparsed status; retained history after removal.");
+} finally { await server.close(); }

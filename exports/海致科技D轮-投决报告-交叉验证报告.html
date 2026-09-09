@@ -1,0 +1,2753 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>海致科技投决报告---交叉验证报告</title>
+  <style>
+:root {
+  --bg: #f7f8fa;
+  --card: #ffffff;
+  --border: #e5e6e8;
+  --border-soft: #f2f3f5;
+  --text: rgba(0, 0, 0, 0.88);
+  --text-muted: #4e5969;
+  --text-soft: #5f6b7a;
+  --text-inverse: #ffffff;
+  --action-primary: #1d2129;
+  --accent: #0066ff;
+  --accent-soft: #e8f3ff;
+  --success: #008a23;
+  --success-soft: rgb(0 138 35 / 10%);
+  --warning: #ad4f00;
+  --warning-soft: rgb(173 79 0 / 12%);
+  --danger: #d92d20;
+  --danger-soft: rgb(217 45 32 / 10%);
+  --radius: 8px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.container { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* ============ 报告头 ============ */
+.report-header {
+  padding: 28px 32px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.report-eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-soft);
+}
+.report-header h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text);
+  line-height: 1.3;
+}
+.report-company {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.verdict-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 640px) {
+  .verdict-grid { grid-template-columns: 1fr; }
+}
+.verdict-card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.verdict-label {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: var(--text-soft);
+}
+.verdict-value {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+.verdict-danger { background: var(--danger-soft); }
+.verdict-danger .verdict-value { color: var(--danger); }
+.verdict-warning { background: var(--warning-soft); }
+.verdict-warning .verdict-value { color: var(--warning); }
+.verdict-positive .verdict-value { color: var(--success); }
+.risk-R1 { color: var(--success); }
+.risk-R2 { color: var(--accent); }
+.risk-R3 { color: var(--warning); }
+.risk-R4, .risk-R5 { color: var(--danger); }
+.report-summary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+/* ============ 顶部 KPI 网格 ============ */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 18px 0 24px;
+}
+.metric-card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.metric-label { margin: 0 0 4px; font-size: 11px; color: var(--text-soft); }
+.metric-value {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--text);
+}
+.metric-sub { margin: 6px 0 0; font-size: 11px; color: var(--text-soft); }
+
+/* ============ 主体（章节，下载版不含目录） ============ */
+.report-main { display: block; }
+
+/* ============ 章节 ============ */
+.sections-wrap { display: flex; flex-direction: column; gap: 12px; }
+.section {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.section > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section > summary::-webkit-details-marker { display: none; }
+.section > summary::after {
+  content: "▾";
+  font-size: 12px;
+  color: var(--text-soft);
+  transition: transform 0.15s ease;
+}
+.section[open] > summary::after { transform: rotate(180deg); }
+.section-body { padding: 4px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ============ 通用文本 ============ */
+.paragraph { margin: 0; font-size: 14px; line-height: 1.7; color: var(--text); }
+.bullets { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.7; color: var(--text); }
+.bullets.dotted { list-style-type: disc; }
+.bullets li + li { margin-top: 4px; }
+mark.hl {
+  background: var(--warning-soft);
+  color: var(--warning);
+  padding: 0 2px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+sup.cite a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 15px;
+  padding: 0 4px;
+  margin: 0 2px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+sup.cite a:hover { background: var(--text); color: var(--text-inverse); border-color: var(--text); }
+
+/* ============ 标注（callout） ============ */
+.callout { border: 1px solid; border-radius: var(--radius); padding: 12px 14px; }
+.callout-title { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.callout-body { margin: 0; font-size: 14px; line-height: 1.7; color: var(--text); }
+.tone-danger { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 24%, transparent); }
+.tone-danger .text-danger { color: var(--danger); }
+.tone-warning { background: var(--warning-soft); border-color: color-mix(in srgb, var(--warning) 24%, transparent); }
+.tone-warning .text-warning { color: var(--warning); }
+.tone-neutral { background: var(--bg); border-color: var(--border); }
+.tone-neutral .text-neutral { color: var(--text-muted); }
+.tone-positive { background: var(--success-soft); border-color: color-mix(in srgb, var(--success) 24%, transparent); }
+.tone-positive .text-positive { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-positive { color: var(--success); }
+.text-neutral { color: var(--text-muted); }
+
+/* ============ KPI 子卡 + 横向条形 ============ */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.stat-card { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); padding: 12px 14px; }
+.stat-label { margin: 0 0 4px; font-size: 11px; color: var(--text-soft); }
+.stat-value { margin: 0; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
+.stat-sub { margin: 6px 0 0; font-size: 11px; color: var(--text-soft); }
+
+.bars-block { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); padding: 14px 16px; }
+.bars-caption { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--text-soft); }
+.bars-list { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: flex; flex-direction: column; gap: 4px; }
+.bar-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.bar-label { font-size: 14px; color: var(--text-muted); }
+.bar-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bar-track { height: 8px; background: var(--border-soft); border-radius: 999px; overflow: hidden; }
+.bar-fill { width: 100%; height: 100%; border-radius: 999px; transform-origin: left center; }
+.bar-fill-positive { background: var(--success); }
+.bar-fill-warning { background: var(--warning); }
+.bar-fill-danger { background: var(--danger); }
+.bar-fill-neutral { background: var(--text-soft); }
+
+/* ============ 表格 ============ */
+/* Keep overflow inside the report surface on narrow screens instead of widening the page. */
+.table-wrap {
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table-wrap thead tr { background: var(--bg); }
+.table-wrap th { min-width: 8rem; text-align: left; padding: 10px 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.table-wrap td { min-width: 8rem; padding: 10px 12px; vertical-align: top; color: var(--text); border-bottom: 1px solid var(--border-soft); overflow-wrap: anywhere; }
+.table-wrap td.emphasize { font-weight: 600; color: var(--text); }
+.table-wrap tbody tr:last-child td { border-bottom: none; }
+@media (max-width: 640px) {
+  .table-wrap table { min-width: 640px; }
+}
+
+/* ============ 验证卡片 ============ */
+.vcards { display: flex; flex-direction: column; gap: 10px; }
+.vcards-group { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); overflow: hidden; }
+.vcards-group > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--bg);
+  user-select: none;
+}
+.vcards-group > summary::-webkit-details-marker { display: none; }
+.vcards-group > summary::after { content: " ▾"; color: var(--text-soft); font-size: 10px; }
+.vcards-group[open] > summary::after { content: " ▴"; }
+.vcards-group > div { padding: 10px 12px; }
+
+.vcard { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.vcard-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--card);
+}
+.vcard-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 999px;
+}
+.chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+.cat-blue, .cat-violet, .cat-cyan, .cat-orange, .cat-emerald, .cat-pink, .cat-indigo, .cat-slate {
+  border-color: var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.chip-risk-R1 { border-color: color-mix(in srgb, var(--success) 24%, transparent); background: var(--success-soft); color: var(--success); }
+.chip-risk-R2 { border-color: color-mix(in srgb, var(--accent) 24%, transparent); background: var(--accent-soft); color: var(--accent); }
+.chip-risk-R3 { border-color: color-mix(in srgb, var(--warning) 24%, transparent); background: var(--warning-soft); color: var(--warning); }
+.chip-risk-R4, .chip-risk-R5 { border-color: color-mix(in srgb, var(--danger) 24%, transparent); background: var(--danger-soft); color: var(--danger); }
+
+.verdict-ok { border-color: color-mix(in srgb, var(--success) 24%, transparent); background: var(--success-soft); color: var(--success); font-weight: 600; }
+.verdict-partial { border-color: color-mix(in srgb, var(--warning) 24%, transparent); background: var(--warning-soft); color: var(--warning); font-weight: 600; }
+.verdict-bad { border-color: color-mix(in srgb, var(--danger) 24%, transparent); background: var(--danger-soft); color: var(--danger); font-weight: 600; }
+.verdict-insufficient { border-color: var(--border); background: var(--bg); color: var(--text-muted); font-weight: 600; }
+
+.vcard-body { display: grid; grid-template-columns: 1.05fr 1fr; }
+@media (max-width: 720px) { .vcard-body { grid-template-columns: 1fr; } }
+.vcard-claim { position: relative; padding: 14px 16px 14px 20px; background: var(--card); border-right: 1px solid var(--border-soft); }
+@media (max-width: 720px) { .vcard-claim { border-right: 0; border-bottom: 1px solid var(--border-soft); } }
+.vcard-claim::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.vcard-evidence { padding: 14px 16px; background: var(--bg); }
+.vcard-deviation { padding: 12px 16px; border-top: 1px solid var(--border-soft); background: var(--warning-soft); display: flex; flex-direction: column; gap: 6px; }
+.vcard-eyebrow {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vcard-index { background: var(--action-primary); color: var(--text-inverse); padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+.vcard-text { margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.7; }
+.claim-text { color: var(--text); font-weight: 500; }
+.evidence-text { color: var(--text-muted); font-size: 14px; }
+.src-chips { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+.src-chip { display: inline-block; padding: 2px 8px; font-size: 10.5px; color: var(--text-muted); background: var(--card); border: 1px solid var(--border); border-radius: 6px; }
+.src-list { margin-top: 12px; }
+.src-list > summary { cursor: pointer; list-style: none; text-align: right; font-size: 14px; font-weight: 500; color: var(--accent); user-select: none; }
+.src-list > summary::-webkit-details-marker { display: none; }
+.src-list > summary::after { content: " ›"; }
+.src-list[open] > summary::after { content: " ▾"; }
+.src-list > div { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.src-anchor { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); padding: 6px 10px; }
+.src-doc { font-size: 14px; color: var(--text-muted); }
+
+/* ============ 引用底部清单 ============ */
+.citations { margin-top: 32px; padding: 22px 26px; border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+.citations h2 { margin: 0 0 14px; font-size: 14px; font-weight: 600; color: var(--text); }
+.citations-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.citation { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border-soft); }
+.citation:first-child { border-top: 0; padding-top: 0; }
+.cite-index { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; font-size: 10.5px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.cite-body { flex: 1; min-width: 0; }
+.cite-doc { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: var(--text); }
+.cite-excerpt { margin: 0; font-size: 14px; line-height: 1.7; color: var(--text-muted); }
+
+/* ============ 打印优化 ============ */
+@media print {
+  body { background: var(--card); }
+  .container { padding: 0; max-width: none; }
+  .section, .vcard, .vcards-group, .metric-card, .stat-card, .bars-block, .table-wrap, .verdict-card, .report-header, .citations {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+  .section[open] > summary::after, .section > summary::after { display: none; }
+  details, details[open] { display: block; }
+  details > summary { pointer-events: none; }
+  .vcards-group, .src-list { border: none; }
+  .vcards-group > div, .src-list > div { padding: 0; margin-top: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header class="report-header">
+  <p class="report-eyebrow">尽调复核报告</p>
+  <h1>海致科技投决报告---交叉验证报告</h1>
+  <p class="report-company">海致科技</p>
+  
+</header>
+
+<section class="metrics-grid"><div class="metric-card">
+  <p class="metric-label">已执行验证项</p>
+  <p class="metric-value text-neutral">74</p>
+  
+</div><div class="metric-card">
+  <p class="metric-label">不一致</p>
+  <p class="metric-value text-danger">5</p>
+  
+</div><div class="metric-card">
+  <p class="metric-label">部分一致</p>
+  <p class="metric-value text-warning">12</p>
+  
+</div><div class="metric-card">
+  <p class="metric-label">证据不足</p>
+  <p class="metric-value text-neutral">45</p>
+  
+</div><div class="metric-card">
+  <p class="metric-label">一致</p>
+  <p class="metric-value text-positive">12</p>
+  
+</div></section>
+
+<main class="report-main">
+  <div class="sections-wrap"><details id="key-risks" class="section" open>
+  <summary class="section-head"><span>关键风险项</span></summary>
+  <div class="section-body"><p class="paragraph">本次交叉验证中,未发现可被直接归为 R4 否决风险的核实项;但投决报告在融资历史沿革、核心团队履历及产品财务指标三个维度上存在多项 R3 重大风险类不一致,需在投决前重点复核。</p>
+<ul class="bullets dotted"><li><mark class="hl">D轮融资时点错位(R3 重大风险 · 不一致)</mark>:投决报告称&quot;2021年完成超5亿元D轮系列融资&quot;,但财务尽调报告P15-P16发展历程与历史沿革表均明确记载2021年完成的是C+轮(高瓴、君联、微村智科等联合注资),D轮实际发生于2022年(中网投领投),且尽调材料中未检索到&quot;超5亿元&quot;的金额表述,可能存在C+/D轮混淆与金额夸大。</li><li><mark class="hl">A轮融资完全错位(R3 重大风险 · 不一致)</mark>:投决报告P3列示&quot;A轮:2023年12月,币种美元,融资金额850万,投后估值2050万,投资方亿方投资、贝塔斯曼、IDG&quot;,与财务尽调报告P15发展历程严重矛盾——尽调报告明确A轮发生于2013年(BAI和IDG联合注资),2023年12月仅发生晨兴控股退出及创望八号、玉另类等投资人引入,系一般工商变更而非新一轮A轮融资,所列融资金额及估值在尽调材料中无任何依据。</li><li><mark class="hl">杨再飞创始人身份与加入时点错位(R3 重大风险 · 不一致)</mark>:投决报告称&quot;杨再飞……2013年创办海致;……前中央电视台《焦点访谈》《经济半小时》记者&quot;,但财务尽调报告P11核心团队介绍明确杨再飞职衔为&quot;联合创始人&amp;首席执行官(CEO)&quot;、2015年加入海致,海致的创办人(2013年创立)是任旭阳;将&quot;创办人&quot;身份与2013年时点错误归属于杨再飞,涉及核心管理层身份与履历的实质性错误。</li><li><mark class="hl">2023年分行业毛利率主张不实(R3 重大风险 · 不一致)</mark>:投决报告称&quot;2023年公安和金融行业毛利率接近55%,能源和政务行业毛利率在30%-35%之间波动&quot;,但财务尽调报告P46行业毛利率表显示2023年公安行业毛利率约48%、金融行业约51%(平均约49.5%,与55%差距约5个百分点),政务(非公安)行业毛利率约57%(远高于30%-35%范围),且尽调材料未单独披露能源行业毛利率,主张中分行业毛利率水平存在系统性偏差。</li></ul></div>
+</details>
+<details id="risk-distribution" class="section" open>
+  <summary class="section-head"><span>风险分布解读</span></summary>
+  <div class="section-body"><ul class="bullets dotted"><li><mark class="hl">R4 否决风险</mark>:本次交叉验证未识别出符合R4否决级别、可直接作为投决否决依据的核实项。投决报告中的各项重大不一致均集中在融资沿革、核心团队履历和分产品/分行业财务指标等具体表述层面,未发现涉及主体资格、上市合规、重大违法违规或核心商业模式根本性不成立等R4级别的事实瑕疵。</li><li><mark class="hl">R3 重大风险</mark>:R3类风险共4项,占74项验证项的约5.4%,分布在三个领域:一是融资历史错位(2项,item-4、item-26),涉及D轮时点、A轮整体认定等关键融资事实性错误,直接影响投决报告中融资脉络可信度;二是核心团队履历错位(1项,item-35),涉及杨再飞创办人身份与加入时点的主体错位,对投决报告中&quot;核心团队稀缺性&quot;叙事构成实质性挑战;三是分行业财务指标偏差(1项,item-70),涉及2023年分行业毛利率水平的高估或低估,可能影响投资人对公司行业结构的判断。此类R3项均建议在投决前要求团队提供原始凭证(工商档案、融资协议、核心团队劳动合同及简历、逐期毛利率明细)进行一一复核。</li><li><mark class="hl">R2 一般风险</mark>:R2类风险为本次验证的最大类别,共55项,占74项验证项的约74%,主要包含两类:一是证据不足类,源于大量市场行业数据(行业市场规模、渗透率、潜在客户数量等)、可比公司财务数据(星环科技、国投智能)、第三方研究报告(Gartner、IDC、赛迪)、具体技术性能基准(LDBC SNB Interactive、ROART、BatchMaker等)以及部分客户合同级数据(国网河南电力、青岛银行、上交所技术等)未在已加载的财务尽调报告和法律尽调报告中直接披露,需要进一步获取投决报告原文、第三方研究报告原文或公开行业数据进行交叉核验;二是部分一致类,涉及产品技术归属(AtlasGraph Chain Replication、AtlasLLM平台等具体实现细节)、管理层与董事任职细节(任旭阳加入百度时间、郑纬民院士职务、武永卫教授工作站头衔)等表述与尽调材料的细致差异。此类R2项建议作为投决前补充尽调的重点方向。</li><li><mark class="hl">R1 低风险</mark>:R1类风险共约12项,占74项验证项的约16%,集中在公司基础信息与核心财务数据两个层面,均与财务尽调报告完全吻合:包括公司2022-2024年1-10月营业收入与净利润序列(财务尽调P23)、2021-2024年1-10月营业成本与毛利序列(财务尽调P23)、销售费用与税金及附加序列(财务尽调P23)、应收账款及预付款项余额(财务尽调P31)、应付账款余额(财务尽调P31)、2021-2022年应收账款账龄分布(财务尽调P57)、存货余额及签约情况明细(财务尽调P59)、实际控制人及一致行动安排(财务尽调P6-7、法律尽调P12)、5%以上财务投资人持股结构(财务尽调P6-8)、公司法定全称(财务尽调P1-2、P16)、累计融资投资方列表(财务尽调P6-8、P15)等。此类数据可作为投决报告数字基础的可信锚点。</li></ul></div>
+</details>
+<details id="detail-r4" class="section" open>
+  <summary class="section-head"><span>R4 否决风险（共 0 项）</span></summary>
+  <div class="section-body"><p class="paragraph">（共 0 项）本次交叉验证未识别出该等级的验证项。</p></div>
+</details>
+<details id="detail-r3" class="section" open>
+  <summary class="section-head"><span>R3 重大风险（共 4 项）</span></summary>
+  <div class="section-body"><div class="vcards"><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-violet"><span class="chip-dot"></span>融资数据</span>
+      <span class="chip chip-risk chip-risk-R3">R3 中风险</span>
+    </div>
+    <span class="chip verdict-bad">不一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#1</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2013年海致科技成立，2021年完成超5亿元D轮系列融资</p>
+      <div class="src-chips"><span class="src-chip" title="2013年海致科技成立，2021年完成超5亿元D轮系列融资">海致科技投决报告.pdf · P16</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">根据海致科技财务尽调报告P15的&#39;目标公司发展历程&#39;表：1）2013年&#39;海致科技正式创立&#39;——与投决报告一致；2）2021年的融资记录为&#39;完成C+轮融资，高瓴、君联、微村智科等联合注资&#39;，并非D轮；3）D轮融资出现在2022年，描述为&#39;完成D轮融资，中国互联网投资基金领投&#39;。根据P16&#39;历史沿革&#39;表进一步佐证：2013年8月&#39;北京海智网聚信息技术有限公司（曾用名）成立&#39;，2021年5月注册资本由1000万元增至5519万元（对应C+轮），2022年12月注册资本减资至569.5013万元（对应D轮相关变更）。因此，投决报告主张的&#39;2021年完成D轮系列融资&#39;与尽调报告不符——D轮实际发生在2022年而非2021年，2021年完成的是C+轮。此外，尽调报告中未检索到&#39;超5亿元&#39;的融资金额表述，该金额数据缺乏尽调报告佐证。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P15">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P15</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P16">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P16</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-violet"><span class="chip-dot"></span>融资数据</span>
+      <span class="chip chip-risk chip-risk-R3">R3 中风险</span>
+    </div>
+    <span class="chip verdict-bad">不一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#2</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">A轮：2023年12月，币种美元，融资金额850万，投后估值2050万，投资方亿方投资、贝塔斯曼、IDG</p>
+      <div class="src-chips"><span class="src-chip" title="A轮 2023年12月 美元 850万 2050万 亿方投资、贝塔斯曼、IDG">海致科技投决报告.pdf · P3</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P15&#39;目标公司发展历程&#39;明确记载：2013年完成A轮融资，BAI和IDG联合注资；2014年完成B轮融资（高瓴、IDG、五源）；2016年完成C轮融资（君联、IDG、五源、万得资讯跟投）；2021年完成C+轮融资；2022年完成D轮融资（中网投领投）。整个发展历程中不存在2023年12月的A轮融资。P16&#39;历史沿革&#39;显示2023年12月的事项为投资人变更（晨兴控股退出、引进创望八号管理和玉另类投资宏涛基金），注册资本仅由3159.66万元微增至3197.58万元，并非新一轮融资。P6-7&#39;现有股权结构&#39;显示贝塔斯曼（BAI GmbH，7.58%）、IDG（天清有限公司SKY FINE LIMITED，5.66%）、亿方投资（亿方科技集团有限公司，4.70%）均为公司现有股东，但其入股并非集中在2023年12月的单一A轮。尽调报告中未找到任何关于&#39;850万美元&#39;&#39;投后估值2050万&#39;的A轮融资记录。投决报告所称&#39;A轮：2023年12月、850万美元、投后估值2050万美元&#39;与尽调报告严重矛盾：A轮实为2013年；2023年12月仅为一般投资人变更；融资金额及估值数据无任何尽调依据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P15">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P15</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P16">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P16</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P6">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P6</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P7">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P7</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R3">R3 中风险</span>
+    </div>
+    <span class="chip verdict-bad">不一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#3</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2023年公安和金融行业毛利率接近55%；能源和政务行业毛利率在30%-35%之间波动</p>
+      <div class="src-chips"><span class="src-chip" title="收入占比最高的公安和金融行业2023年毛利率较高，接近55%。能源和政务行业…30%-35%左右波动">海致科技投决报告.pdf · P43</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P46&quot;2021-2024年10月公司主要行业毛利率&quot;表显示：2023年公安行业毛利率约48%、金融行业毛利率约51%、政务（非公安）行业毛利率约57%、其他行业约30%。该表未单独列示&quot;能源&quot;行业。投资报告中&quot;公安和金融行业2023年毛利率接近55%&quot;与财务尽调数据存在偏差：金融51%尚可视为接近55%，但公安48%距55%有约7个百分点差距，二者平均水平约49.5%而非55%。&quot;能源和政务行业毛利率在30%-35%之间波动&quot;与财务尽调数据严重不符：2023年政务（非公安）行业毛利率约57%，远高于30%-35%范围；财务尽调报告未单独披露能源行业毛利率。期间映射与口径核对：投决报告与财务尽调报告同指2023年同一公司同一指标，验证项中的2023年期间与证据页2023年度一致。结论：投决报告对2023年公安、金融行业毛利率水平存在一定程度的高估，对政务行业毛利率水平存在严重低估，且能源行业无法在尽调报告中独立验证。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P46">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P46</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-indigo"><span class="chip-dot"></span>团队治理</span>
+      <span class="chip chip-risk chip-risk-R3">R3 中风险</span>
+    </div>
+    <span class="chip verdict-bad">不一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#4</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">杨再飞为海致科技创始人&amp;CEO，2000年创办上海友拓公关顾问有限公司，服务腾讯、微软、麦当劳、星巴克、蒙牛等头部客户，后通过并购退出；2013年创办海致；前中央电视台《焦点访谈》《经济半小时》记者。</p>
+      <div class="src-chips"><span class="src-chip" title="杨再飞 创始人&amp;CEO 2000年创办上海友拓公关顾问有限公司">海致科技投决报告.pdf · P25</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P11核心团队介绍表显示：杨再飞职衔为&#39;联合创始人&amp;首席执行官(CEO)&#39;（非&#39;创始人&#39;），1974年生，1994年毕业于中国人民大学国际关系学院，曾在中央电视台担任《焦点访谈》《经济半小时》记者，2000年创办上海友拓公关顾问有限公司，2015年加入海致并担任CEO（注意：原文为&#39;2015年加入海致&#39;，并非&#39;2013年创办海致&#39;）。同一表格中任旭阳的职衔为&#39;创始人&amp;董事长&#39;，且明确记载任旭阳&#39;2013年创立海致&#39;。因此：1) &#39;创始人&#39;应为&#39;联合创始人&#39;，2) 杨再飞是2015年加入海致，海致的创办人（2013年创立）是任旭阳。投决报告将海致创办年份和身份错误归属于杨再飞。客户列表（腾讯、微软、麦当劳、星巴克、蒙牛）和&#39;并购退出&#39;在财务尽调报告中未提及，无法从现有证据中证实或证伪。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P11">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P11</span>
+</div></div></details>
+    </section>
+  </div>
+</article></div></div>
+</details>
+<details id="detail-r2" class="section" open>
+  <summary class="section-head"><span>R2 一般风险（共 55 项）</span></summary>
+  <div class="section-body"><div class="vcards"><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-violet"><span class="chip-dot"></span>融资数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-bad">不一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#1</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">D轮融资发生于2021年12月（投决报告P3原文表格中融资金额、币种、投后估值及投资方未完整呈现）</p>
+      <div class="src-chips"><span class="src-chip" title="D轮 2021年12月 人民币 …">海致科技投决报告.pdf · P3</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P15《1.4 目标公司发展历程》明确记载：2021年完成的是C+轮融资（高瓴、君联、微村智科等联合注资），而D轮融资发生于2022年，由中国互联网投资基金领投。法律尽调报告P7进一步佐证D轮投资人系于2023年3月至12月期间陆续完成工商变更成为目标公司股东，时间线与D轮于2022年完成更为吻合。投决报告P3所述D轮于2021年12月发生与财务尽调报告记载的2022年存在年度级偏差，且D轮时间点更接近C+轮（2021年），存在C+/D轮混淆或时间误录的可能。此外，投决报告P3原文表格中融资金额、币种、投后估值及投资方的完整呈现情况因未直接调取P3原文，仅可从验证项locator中确认存在不完整呈现的描述。</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P15">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P15</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P16">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P16</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P7">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P7</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#2</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技2021-2024.1-10合同额分别为46,180万元、46,422万元、42,440万元、24,448万元；同期营业收入分别为26,090万元、32,500万元、38,927万元、28,883万元</p>
+      <div class="src-chips"><span class="src-chip" title="一、合同额 46,180 46,422 42,440 24,448；二、营业收入 26,090 32,500 38,927 28,883">海致科技投决报告.pdf · P42</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">【期间-指标-数值-来源页 内部推理映射】
+**营业收入对比（财务尽调报告P23模拟利润表）：**
+| 期间 | 投决报告主张 | 财务尽调证据 | 差异 |
+|---|---|---|---|
+| 2021年度 | 26,090万元 | 26,089.69万元 | -0.31万元（约万元四舍五入，R1级） |
+| 2022年度 | 32,500万元 | 32,499.83万元 | -0.17万元（约万元四舍五入，R1级） |
+| 2023年度 | 38,927万元 | 38,926.74万元 | -0.26万元（约万元四舍五入，R1级） |
+| 2024年1-10月 | 28,883万元 | 28,883.10万元 | +0.10万元（约万元四舍五入，R1级） |
+→ 营业收入4个期间数值在四舍五入精度内完全一致，且期间绑定正确（2021年度、2022年度、2023年度、2024年1-10月）。
+**合同额对比：**
+财务尽调报告P20-P30（资产负债表、利润表、现金流量表、盈利能力分析、营运能力分析）以及P43（营业收入按类型分析）均未出现&quot;合同额&quot;汇总数据。已检索的页码范围：财务尽调报告P20-30、P43；法律尽调报告P52、P102（与财务无关）。未在已检索证据中找到46,180/46,422/42,440/24,448万元这组合同额序列的披露原文。
+合同额（订单/合同口径）通常为管理层非财务指标，可能由公司单独提供或列示于投决报告附件，未必出现在财务尽调报告的标准报表中。证据不足以验证该序列。
+**结论拆分：**
+- 营业收入：一致（4/4期间匹配，万元四舍五入精度内）
+- 合同额：证据不足（未在财务尽调报告已检索章节中披露该序列）</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P23">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P23</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P43">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P43</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>公司数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#3</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">AtlasGraph图模融合推理平台支持从多种数据源自动化构建知识图谱，提供实体对齐和消歧功能；通过多跳推理自动发现实体之间潜在复杂关系；提供推理路径可视化功能；支持可视化应用构建平台。</p>
+      <div class="src-chips"><span class="src-chip" title="AtlasGraph图模联合推理平台 自动化知识构建 精准理解深度推理 推理过程透明可视">海致科技投决报告.pdf · P32</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">在海致科技财务尽调报告 P40 找到 AtlasGraph图模联合推理平台的官方描述,确认产品存在并支持&quot;从多种数据源自动化构建知识图谱&quot;(对应验证项主张第 1 点)。原文进一步说明该平台&quot;为开发者提供了灵活的工具和接口,用于自定义图模式、推理逻辑和算法&quot;,并将&quot;大模型的语义理解能力与图谱的精准知识表达和推理能力深度融合&quot;以&quot;应对复杂推理挑战&quot;。但已检索的证据中:
+- &quot;实体对齐和消歧功能&quot;:未在已检索页面中找到明确表述;
+- &quot;多跳推理自动发现实体之间潜在复杂关系&quot;:原文仅提&quot;复杂推理&quot;,未明确出现&quot;多跳推理&quot;或&quot;潜在复杂关系&quot;等表述;
+已检索的 P24 为财务概览的现金流量表内容,与产品功能无关;法律尽调报告 P4、P19 不涉及产品功能描述。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P40">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P40</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>公司数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#4</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致图数据库产品源于清华，基于Rust与Chain Replication技术实现分布式，单机和分布式兼具高性能</p>
+      <div class="src-chips"><span class="src-chip" title="公司图数据库产品源于清华，基于Rust，Chain Replication技术实现分布式，单机和分布式兼具高性能">海致科技投决报告.pdf · P16</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">逐项拆解验证：
+1)「图数据库产品源于清华」——证据支持。财务尽调报告P12显示CTO杨娟为清华大学计算机科学与技术系博士，2015年加入海致；法律尽调报告P82序号18专利「一种分布式图数据库快速恢复方法、介质和电子设备」的申请人为「海致星图 清华大学」，且发明人中包含多名相关人员（杨树森、杨赛飞、程广、成江、陈晨、刘建），与清华大学存在直接合作/共同申请关系；P15发展历程显示2021年「发布国产高性能图数据库AtlasGraph DB」并成立「海致高性能图计算院士专家工作站」。
+2)「基于Chain Replication技术实现分布式」——未在已检索材料中直接提及Chain Replication技术字样。法律尽调P82序号18专利涉及「分布式图数据库快速恢复方法」，可间接证明其有分布式图数据库技术积累，但未明确指出采用Chain Replication这一具体分布式一致性协议/复制算法。
+3)「单机和分布式兼具高性能」——部分支持。P15发展历程中「国产高性能图数据库AtlasGraph DB」支持高性能定位；法律尽调P82序号18专利支持分布式能力；但「单机高性能」在尽调材料中未见独立测试或对比数据。
+综合判断：「源于清华」与「分布式高性能」有证据支持；「Chain Replication」属具体技术实现细节，未在尽调材料中找到对应描述或佐证；「单机高性能」缺乏直接证据。</p>
+      <details class="src-list"><summary>证据来源 · 5</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P12">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P12</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P15">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P15</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P10">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P10</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P82">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P82</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P83">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P83</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>公司数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#5</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2022年集团全职总人数平均800人，2024年下降至716人；2023年人均产出50万元；2023年销售费用率23%、研发费用率16%</p>
+      <div class="src-chips"><span class="src-chip" title="集团全职总人数由2022年平均800人下降至2024年的716人。2023年实现人均产出50万元…2023年销售费用率已经回到23%…研发费用率持续下降2023年下降至16%">海致科技投决报告.pdf · P44</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P9-10明确显示：截至2024年10月31日，目标公司集团总人数为735人（海致科技389人+海致星图346人），与投决报告所述&#39;2024年下降至716人&#39;不一致，存在19人差异。财务尽调报告未提供2022年集团全职总人数平均值（无法验证投决报告&#39;2022年平均800人&#39;）。2023年人均产出50万元在尽调报告中未直接列示，按尽调报告P23的2023年度营业收入38,926.74万元推算：若按800人计算人均产出≈48.7万元，若按735人计算≈52.96万元，均可粗略支撑50万元水平，但尽调报告未给出明确人均产出指标。销售费用率核验：P23数据为销售费用8,991.55万元/营业收入38,926.74万元=23.10%，与投决报告的23%基本一致；但P28中销售费用占收入比2023年度显示为22%，存在轻微口径差异。研发费用率核验：P23数据为研发费用6,393.80万元/营业收入38,926.74万元=16.43%，与投决报告的16%基本一致；但P28中研发费用占收入比2023年度显示为15%，存在轻微口径差异。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P9">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P9</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P10">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P10</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P23">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P23</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P28">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P28</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#6</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">公司累计服务客户订单数量超1,200家，涵盖金融、公安、政府、能源和交通等多个行业</p>
+      <div class="src-chips"><span class="src-chip" title="累计服务客户订单数量超1,200家，涵盖金融、公安、政府、能源和交通等多个行业">海致科技投决报告.pdf · P36</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告（3572f26f57e294c000f348cb06bdf192）第11、30-40页及海致科技法律尽调报告（fd2b7d62489d236bd4793762ffcdf545）第53、79页。
+关于&#39;1,200家客户订单&#39;这一具体数字：
+1. 财务尽调报告P33&#39;4.2 在手订单分析&#39;显示：截至2024年10月31日，已下单执行中合同数量为471份，已下单执行中客户数量为235个。这是当前在手数据，并非累计数据。
+2. 财务尽调报告P39&#39;4.3 营业收入—商业模式&#39;明确表述：&#39;海致服务了三百多个中大型行业客户，包括金融、公安、能源等领域&#39;，即累计约300+中大型客户（非订单数）。
+3. 财务尽调报告P30营运能力分析部分提到&#39;最终客户面向包括金融、公安、能源等国企央企及机关单位&#39;。
+4. 财务尽调报告P32客户发展历程列出三个阶段的客户标识，覆盖金融（建行、招行、兰州银行、广发、中信、交行）、公安（上海市公安局、公安部、北京市公安局、山东省公安厅、内蒙古公安厅等）、交通（中远海运、上海道路运输）、能源/通讯/政务（中国移动、航天信息、上海市大数据中心等）。
+5. 财务尽调报告P32附注&#39;截止当前，国有/股份制银行市场覆盖率达70%，省级公安机关覆盖率达60%，省级电网覆盖率达30%&#39;。
+期间映射与对比：
+- 投决报告主张：累计服务客户订单数量超1,200家（累计口径，未指定期间）
+- 财务尽调报告数据：累计服务中大型客户三百多家（300+，P39）；当前在手订单471份/客户235个（P33，截至2024.10.31）
+- 两个指标口径不同：报告说&#39;300+客户&#39;，主张说&#39;1,200+订单&#39;。即使按&#39;每客户约4单&#39;推算，1,200+订单数仍与P33在手订单数据存在显著差距，且财务尽调未提供历史累计订单总数。
+行业覆盖方面：金融、公安、能源均被证实（P30、P32、P39），&#39;政府&#39;（政务/机关单位）也有覆盖（镇江市政府治理、上海市大数据中心等），&#39;交通&#39;有覆盖（中远海运、上海道路运输等）。行业覆盖主张基本可支持。
+关于&#39;1,200家订单&#39;这一具体数字，在财务尽调报告和法律尽调报告中均未找到直接证据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P39">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P39</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P33">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P33</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P32">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P32</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P30">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P30</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#7</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">DMC数据智能产品毛利率在50%以上，知识图谱产品2023年毛利率近50%，BDP和图数据库产品毛利率超过60%</p>
+      <div class="src-chips"><span class="src-chip" title="DMC毛利率在50%以上，知识图谱产品毛利率略低，2023年毛利率也近50%。BDP和图数据库产品…超过60%">海致科技投决报告.pdf · P43</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P45-46给出各产品线逐期毛利率：
+1) DMC&amp;图谱毛利率：2021年51.51%、2022年42.06%、2023年49.67%、2024年1-10月37.25%。投决报告称&quot;DMC毛利率在50%以上&quot;仅2021年成立，2022-2024.1-10均不足50%（2023年49.67%最接近但仍未达50%）。
+2) 知识图谱2023年毛利率48.21%，与&quot;近50%&quot;一致。
+3) BDP毛利率：2021年58.78%、2022年71.18%、2023年37.61%、2024年1-10月100%（成本为0）。投决报告&quot;BDP毛利率超过60%&quot;不准确，2021年58.78%未达60%，2023年仅37.61%大幅低于60%。
+4) 图数据库毛利率：2021年无数据、2022年约64%、2023年约66%、2024年1-10月约78%，与&quot;超过60%&quot;基本一致（2022-2024.1-10均&gt;60%）。
+综上，四项子主张中：知识图谱2023年近50%和图数据库超过60%被证据支持；DMC持续&gt;50%和BDP持续&gt;60%与逐期财务数据不一致。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P45">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P45</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P46">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P46</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-indigo"><span class="chip-dot"></span>团队治理</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#8</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">杨娟为银监会和人民银行联合的知识图谱标准起草专家委员会成员；荣获&quot;2021中国经济年度人物新锐奖&quot;、&quot;2019年度中国金融大数据十佳领导者&quot;。</p>
+      <div class="src-chips"><span class="src-chip" title="银监会和人民银行联合的知识图谱标准起草专家委员会成员">海致科技投决报告.pdf · P25</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">在海致科技财务尽调报告P12的核心团队介绍中，关于杨娟的完整描述为：&quot;女，1979年生，16岁获江苏淮安高考状元，清华大学计算机科学与技术系博士，复旦大学计算机科学专业本科及硕士，美国霍特国际商学院MBA。前IBM资深软件架构师，银监会和人民银行联合的知识图谱标准起草专家委员会成员，荣获&#39;2021中国经济年度人物新锐奖&#39;，中国电子信息产业发展研究院特聘专家。2015年加入海致。&quot;——该描述明确确认了：（1）杨娟为银监会和人民银行联合的知识图谱标准起草专家委员会成员；（2）荣获&quot;2021中国经济年度人物新锐奖&quot;。但财务尽调报告中并未提及&quot;2019年度中国金融大数据十佳领导者&quot;这一荣誉。在法律尽调报告中亦未检索到该荣誉的对应信息。因此三项主张中前两项得到支持，第三项（2019年度中国金融大数据十佳领导者）证据不足。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P12">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P12</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P11">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P11</span>
+</div></div></details>
+    </section>
+  </div>
+</article></div>
+<details class="vcards-group" >
+  <summary>证据不足项 · 45</summary>
+  <div class="vcards"><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#1</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技2024年全年预期实现收入5亿元（Q4确认大额收入），全年预期实现盈利超3,600万元</p>
+      <div class="src-chips"><span class="src-chip" title="全年预期实现收入5亿元（Q4确认大额收入）…2024年全年预期实现盈利超3,600万元">海致科技投决报告.pdf · P3</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索财务尽调报告P20-P28、P35-P50等多个核心财务页面（涵盖财务概览、模拟利润表、收入分析、毛利分析、成本费用分析等章节），以及法律尽调报告P101-P102等。
+**期间映射与数值梳理：**
+| 指标 | 期间 | 数值 | 来源页 |
+|---|---|---|---|
+| 营业收入 | 2024年1-10月 | 28,883.10万元 | 财务尽调P23、P42 |
+| 营业收入 | 2023年度 | 38,926.74万元 | 财务尽调P23、P42 |
+| 净利润 | 2024年1-10月 | -1,341.39万元 | 财务尽调P23 |
+| 净利润 | 2023年度 | -615.89万元 | 财务尽调P23 |
+| 净利润 | 2022年度 | -11,734.57万元 | 财务尽调P23 |
+| 净利润 | 2021年度 | -10,908.25万元 | 财务尽调P23 |
+**关键发现：**
+1. 财务尽调报告未提供2024年全年（1-12月）的收入和净利润预测数据，所有数据均止于</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#2</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">存货累计对利润影响：2023年以前为-3,150万元，2024年预期影响为-1,270万元</p>
+      <div class="src-chips"><span class="src-chip" title="2023年以前累计对利润的影响为-3,150万，2024年对公司利润预期影响为-1,270万">海致科技投决报告.pdf · P47</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">在海致科技财务尽调报告第60页（4.12 主要报表科目分析—存货（2/2））的表5</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#3</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2024/10/31已签约存货余额18,315.18万元（占比75.26%），2023/12/31已签约存货余额16,454.23万元（占比81.13%）；2024/10/31存货中超过76%发生在近两年</p>
+      <div class="src-chips"><span class="src-chip" title="已签约 18,315.18 75.26% 16,454.23 81.13%；超过76%发生在近两年">海致科技投决报告.pdf · P48</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P59表1（存货余额对应签约情况）显示：2024年10月31日已签约余额18,315.18万元、占比75.26%；2023年12月31日已签约余额16,454.23万元、占比81.13%；存货余额分别为24,334.52万元（2024/10/31）和20,282.53万元（2023/12/31）。前两个数值与占比完全一致。
+针对第三点</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#4</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2024/10/31账龄1年以内应收账款余额17,280.25万元（占比75%），1-2年余额2,380.96万元（占比10%），2-3年余额2,155.77万元（占比9%）；坏账计提参照星环科技口径（1年内5%、1-2年10%、2-3年30%）</p>
+      <div class="src-chips"><span class="src-chip" title="1年以内 17,280.25 75%；1-2年 2,380.96 10%；2-3年 2,155.77 9%；坏账计提比例（按照星环科技）5% 10% 30%">海致科技投决报告.pdf · P46</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">验证项执行失败: Received response with null value for &#39;choices&#39;. This can happen when using OpenAI-compatible APIs (e.g., vLLM) that return a response in an unexpected format. Full response keys: [&#39;id&#39;, &#39;choices&#39;, &#39;created&#39;, &#39;model&#39;, &#39;object&#39;, &#39;service_tier&#39;, &#39;system_fingerprint&#39;, &#39;usage&#39;, &#39;base_resp&#39;, &#39;input_sensitive&#39;, &#39;input_sensitive_type&#39;, &#39;output_sensitive&#39;, &#39;output_sensitive_int&#39;, &#39;output_sensitive_type&#39;]</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#5</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2023/12/31账龄1年以内应收账款余额9,160.44万元（占比61%），1-2年余额2,064.80万元（占比14%），2-3年余额2,193.25万元（占比15%）</p>
+      <div class="src-chips"><span class="src-chip" title="2023/12/31 1年以内 9,160.44 61%；1-2年 2,064.80 14%；2-3年 2,193.25 15%">海致科技投决报告.pdf · P46</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P57</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#6</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">可比公司星环科技2023年营收4.91亿元，净亏损2.88亿元（2019A-2023A收入分别为1.74亿、2.60亿、3.31亿、3.73亿、4.91亿）</p>
+      <div class="src-chips"><span class="src-chip" title="2023年营收4.91亿元，净亏损2.88亿元">海致科技投决报告.pdf · P19</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">本次检索的可比公司财务数据需要核验星环科技（688031）2023年度及2019-2023年各年度营收和净利润数据。已检索的文件库文档库仅包含两份文档：海致科技财务尽调报告.pdf（doc_id: 3572f26f57e294c000f348cb06bdf192）和海致科技法律尽调报告.pdf（doc_id: fd2b7d62489d236bd4793762ffcdf545）。
+1. 海致科技财务尽调报告.pdf P29：内容为目标公司（海致科技）盈利能力分析，含销售毛利率、销售净利率、净资产收益率数据，未涉及星环科技可比公司财务数据。
+2. 海致科技财务尽调报告.pdf P42：内容为目标公司各类型收入构成分析，含BDP、DMC&amp;图谱、知识图谱等业务线收入明细，未涉及星环科技可比公司数据。
+3. 海致科技法律尽调报告.pdf P51：内容为竞芯电子增资及股权转让细节，与星环科技无关。
+4. 海致科技法律尽调报告.pdf P7：内容为VIE协议及重组相关法律分析，与星环科技财务数据无关。
+上述所有检索结果中均未出现星环科技（688031）的财务数据，无法对投决报告P19中关于星环科技2023年营收4.91亿元、净亏损2.88亿元及2019-2023年各年度营收数据的主张进行直接验证。文件库中也没有星环科技的年报或其他公开披露材料。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P29">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P29</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P42">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P42</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P51">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P51</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P7">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P7</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#7</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">可比公司国投智能（原美亚柏科）2024年11月市值130亿元，2023年实现营收19.84亿元，净亏损2.06亿元（2020A-2023A收入分别为23.86亿、25.35亿、22.80亿、19.84亿）</p>
+      <div class="src-chips"><span class="src-chip" title="目前市值130亿元（2024年11月）">海致科技投决报告.pdf · P20</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索的证据来源包括：
+1. 海致科技财务尽调报告.pdf P45：内容为目标公司海致科技自身的营业收入构成分析（2021-2024.10），未涉及可比公司国投智能/美亚柏科。
+2. 海致科技财务尽调报告.pdf P29：内容为目标公司海致科技自身的盈利能力分析（销售毛利率、净利率、净资产收益率），未涉及可比公司国投智能/美亚柏科。
+3. 海致科技法律尽调报告.pdf P102：内容为目标公司海致科技的软件著作权登记列表，与可比公司无关。
+4. 海致科技法律尽调报告.pdf P38：内容为目标公司海致科技的资质证书列表，与可比公司无关。
+文件库中仅有两份文件（海致科技财务尽调报告.pdf 和海致科技法律尽调报告.pdf），均为目标公司海致科技的尽调材料，不包含可比公司国投智能（原美亚柏科，300188.SZ）的市值、营收、净利润等数据。国投智能/美亚柏科作为A股上市公司，其数据应来源于公开年报、Wind/同花顺等外部数据库，投决报告中的可比公司分析通常引用这些外部数据，文件库中无相应来源可供核验。已检索的页面P29、P45（财务尽调报告）和P38、P102（法律尽调报告）均与本验证项无关。
+期间映射说明：本验证项涉及国投智能/美亚柏科2020A-2023A四年营收、2023年净亏损、2024年11月市值共6个数据点，文件库中均无对应证据。</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>公司数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#8</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2023年12月26日LDBC SNB Interactive基准测试中，AtlasGraph打破世界纪录，相较此前世界纪录将测试成绩提高了45%</p>
+      <div class="src-chips"><span class="src-chip" title="2023年12月26日……LDBC SNB Interactive……AtlasGraph成功打破世界纪录……测试成绩提高了45%">海致科技投决报告.pdf · P40</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索 doc_id 3572f26f57e294c000f348cb06bdf192（海致科技财务尽调报告.pdf）的第24页、第49页，以及 doc_id fd2b7d62489d236bd4793762ffcdf545（海致科技法律尽调报告.pdf）的第38页、第102页。这些页面的内容分别为：①财务尽调报告P49为销售费用构成分析；②财务尽调报告P24为模拟现金流量表；③法律尽调报告P38为目标公司资质证书列表（增值电信业务许可、ISO体系认证等）；④法律尽调报告P102为软件著作权登记列表（包含海致科技流程挖掘系统、数据门户系统等）。所有检索结果均未提及LDBC SNB Interactive基准测试、AtlasGraph图数据库世界纪录或45%性能提升等任何相关信息。验证项要求证据类型为第三方报告/新闻报道，但当前文件库仅包含财务尽调报告和法律尽调报告，未包含LDBC官方榜单、行业新闻、媒体报道等可佐证该技术性能主张的第三方来源，因此无法对该项主张做出支持或反驳的判断。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P49">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P49</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P38">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P38</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P102">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P102</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>公司数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#9</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">AtlasGraph为国内首款基于Rust自研的新一代云原生实时并行图数据库，向中信银行销售价格为80万元/套，永久授权</p>
+      <div class="src-chips"><span class="src-chip" title="国内首款基于Rust自研的新一代云原生实时并行图数据库……向中信银行销售价格为80万元/套，永久授权">海致科技投决报告.pdf · P34</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告（页码17-19、20-30、34、43）和法律尽调报告（页码30-45、22、33），未找到与&quot;中信银行&quot;作为AtlasGraph客户、&quot;80万元/套&quot;销售价格、&quot;永久授权&quot;条款相关的直接证据。
+关键发现：
+1. **财务尽调报告P34大额销售合同主要条款表**：列示了中移信息系统、镇江市公安局、四川中电启明星、北京市公安局石景山分局、中远海运科技、中国移动湖南邵阳分公司、山东云宏信息技术等7份大额销售合同（金额807.02-2,857.60万元），其中仅山东云宏合同涉及&quot;海致星图AtlasGraph图数据库软件&quot;，**未出现中信银行**。
+2. **法律尽调报告P40**：提及&quot;目标集团提供了2022年、2023年及2024年1-6月前十大供应商、前十大客户的业务合同&quot;，但检索范围内未列示与中信银行相关的具体合同条款。
+3. **法律尽调报告P37**：仅描述目标集团拥有&quot;图数据库（AtlasGraph 图数据库）分布式高性能图数据库&quot;产品，未涉及&quot;国内首款基于Rust自研&quot;或&quot;云原生实时并行&quot;的技术定位声明。
+4. **财务尽调报告P43**：按收入类型列示了图数据库收入分类，但未具体披露中信银行交易。
+需要注意的是，80万元/套的销售规模相对较小（远低于表中列示的807-2,857万元大额合同），理论上可能未列入&quot;大额销售合同&quot;清单；但财务/法律尽调报告中均未出现可佐证&quot;中信银行&quot;作为客户、&quot;80万元/套&quot;单价、&quot;永久授权&quot;条款的具体证据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P34">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P34</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P43">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P43</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P40">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P40</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P37">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P37</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>公司数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#10</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">截至2024年10月末，海致科技拥有员工735人，其中研发人员177人，产品技术及交付人员415人，销售相关96人，管理人员47人</p>
+      <div class="src-chips"><span class="src-chip" title="截至2024年10月末，公司拥有员工735人">海致科技投决报告.pdf · P24</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P9-10明确：截至2024年10月31日，目标公司合计735人，其中海致科技=389人、海致星图=346人（389+346=735）。P14给出海致科技职能部门占比（项目交付部54%、华东事业部8%、产品技术部6%、行业产品技术部6%、客户成功部6%、售前咨询部5%、交通事业部4%、销售部4%、人力资源部3%、财务部2%、总裁办2%等），均为相对比例而非绝对数。法律尽调报告P40则记载：截至2024年10月31日，目标集团签订劳动合同员工702人，另加劳务外包16人、劳务派遣7人、实习生33人，合计758人。
+期间与口径核验：
+- 投决报告P24原文为</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>公司数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#11</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技成立于2013年8月，是国家级高新技术企业、北京市专精特新小巨人企业</p>
+      <div class="src-chips"><span class="src-chip" title="成立于2013年8月，是专注于图计算">海致科技投决报告.pdf · P22</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">三项子主张核验情况：
+1) 成立时间2013年8月——【一致】财务尽调报告P4《缩写及定义》明确记载：北京海致科技集团有限公司（简称海致科技）成立时间2013-08-23；财务尽调报告P16《历史沿革表》明确记载：2013年8月北京海智网聚信息技术有限公司（曾用名）成立，注册资本100万元人民币。两份报告互相印证。
+2) 北京市专精特新小巨人企业——【一致】财务尽调报告P15《目标公司发展历程》2021年项下明确记载：北京市专精特新</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>公司数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#12</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">项目于2024年7月30日进入市级政府投资基金项目库并纳入储备项目库，项目来源为君联资本引荐，海淀区和市经信局推荐</p>
+      <div class="src-chips"><span class="src-chip" title="2024年7月30日进入市级政府投资基金项目库并纳入储备项目库">海致科技投决报告.pdf · P3</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已在两个已映射的 文件库 文档中检索：(1) 海致科技财务尽调报告.pdf（doc_id: 3572f26f57e294c000f348cb06bdf192），检索到 P24（模拟现金流量表）和 P42（营业收入按类型分析），内容均不涉及市级政府投资基金项目库、储备项目库、君联资本引荐或海淀区和市经信局推荐等事实；(2) 海致科技法律尽调报告.pdf（doc_id: fd2b7d62489d236bd4793762ffcdf545），检索到 P39（练泰集团资质证书清单）和 P87（目标公司专利列表），内容均与项目来源或政府基金入库信息无关。已检索的两个尽调报告均属于财务和法律专题，未涵盖项目入库流程、引荐方及政府推荐机构等行政管理类信息，无法在已有 文件库 文档中找到与该主张对应的支持或反驳证据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P42">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P42</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P39">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P39</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P87">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P87</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#13</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">上交所技术有限责任公司累计签约金额3,983万元，合同数量32个，合同单价124万元</p>
+      <div class="src-chips"><span class="src-chip" title="上交所技术有限责任公司 3,983 32 124">海致科技投决报告.pdf · P38</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告（doc_id: 3572f26f57e294c000f348cb06bdf192）P21（模拟合并资产负债表2/3，含应付账款/合同负债/实收资本等）、P43（营业收入按类型分析，含DMC&amp;图谱、知识图谱等收入占比），以及海致科技法律尽调报告（doc_id: fd2b7d62489d236bd4793762ffcdf545）P33（子公司股东信息）、P52（历次增资明细）。所检索页面中均未出现&#39;上交所技术有限责任公司&#39;作为客户的合同金额、合同数量或合同单价等具体数据，也未找到任何客户级别的合同清单表（按累计签约金额、合同个数排序的明细）。该类客户级数据通常出现在财务尽调报告的&#39;主要客户分析&#39;或&#39;收入按客户分析&#39;章节，但当前检索的页码范围未覆盖到相关章节。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P21">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P21</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P43">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P43</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P33">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P33</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P52">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P52</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#14</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">国网河南电力累计签约金额6,031万元，合同数量61个，合同单价99万元</p>
+      <div class="src-chips"><span class="src-chip" title="国网河南电力 6,031 61 99">海致科技投决报告.pdf · P38</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索的证据均未涉及国网河南电力的客户合同数据。具体如下：(1) 海致科技财务尽调报告P21为模拟合并资产负债表（负债及权益部分），不含客户合同清单；(2) 海致科技财务尽调报告P23为模拟利润表，不含客户合同清单；(3) 海致科技法律尽调报告P100为软件著作权登记列表（序号99-110），与客户合同无关；(4) 海致科技法律尽调报告P96为软件著作权登记列表（序号51-62），与客户合同无关。当前文件库中未检索到包含&#39;国网河南电力&#39;客户合同数量、累计签约金额及合同单价的合同清单/客户清单类证据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P21">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P21</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P23">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P23</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P100">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P100</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P96">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P96</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#15</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">竞争对手TigerGraph客户包括中国建设银行、上海汽车集团财务有限责任公司、泰康在线保险、阳光保险、微软Xbox、摩根大通、梅赛德斯-奔驰和福特汽车等</p>
+      <div class="src-chips"><span class="src-chip" title="中国建设银行、上海汽车集团财务有限责任公司、泰康在线保险">海致科技投决报告.pdf · P18</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告.pdf（page 17、page 25）和海致科技法律尽调报告.pdf（page 4、page 15）。其中财务尽调报告P17讨论内部控制制度和收入确认问题，P25为资产负债表科目占比分析；法律尽调报告P4为报告说明，P15讨论ICP证、资质及信息系统等保测评问题。以上所有页面的内容均未涉及TigerGraph及其客户名单，无法支持或反驳该主张。TigerGraph作为第三方竞品，其客户信息属于市场公开事实，投决报告引用的客户列表通常来源于TigerGraph官网或公开宣传材料，财务/法律尽调报告不会涵盖此类竞争分析信息。当前文件库文件库中仅有财务尽调报告和法律尽调报告，未包含投决报告全文或其他可佐证TigerGraph客户名单的材料。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P17">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P17</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P25">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P25</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P4">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P4</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P15">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P15</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#16</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">山东省公安厅累计签约金额3,691万元</p>
+      <div class="src-chips"><span class="src-chip" title="山东省公安厅 3,691">海致科技投决报告.pdf · P38</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已在财务尽调报告和法律尽调报告中检索&#39;山东省公安厅&#39;相关合同信息。在财务尽调报告P34的&#39;大额销售合同主要条款&#39;表格中，列出了若干主要客户合同（包括中移信息系统集成有限公司/江西省南昌市赣江新区公安局1,000.11万、镇江市公安局2,857.60万、四川中电启明星/顺义分局807.02万、北京市公安局石景山分局1,166.08万、中远海运/上海市道运中心1,242.00万、中国移动湖南邵阳/邵阳市公安1,368.55万、山东云宏信息/济南市公安局1,175.00万），但未见&#39;山东省公安厅&#39;作为合同主体的合同记录，也未见任何3,691万元的合同金额。法律尽调报告P16、P20涉及网络安全等级保护、劳动人事、技术开发合同等内容，与山东省公安厅签约金额无直接关联。已检索范围：财务尽调报告P27、P34；法律尽调报告P16、P20。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P34">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P34</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P27">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P27</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P16">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P16</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P20">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P20</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#17</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">建信金融科技有限责任公司累计签约金额7,763万元，合同数量48个，合同单价162万元</p>
+      <div class="src-chips"><span class="src-chip" title="建信金融科技有限责任公司 7,763 48 162">海致科技投决报告.pdf · P38</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已在海致科技财务尽调报告（doc_id 3572f26f57e294c000f348cb06bdf192，检索页20-70）和海致科技法律尽调报告（doc_id fd2b7d62489d236bd4793762ffcdf545，检索页20-93）中系统检索&#39;建信金融科技有限责任公司&#39;的累计签约金额、合同数量和合同单价数据。已找到的相关信息如下：1) 财务尽调P44&#39;客户变动分析&#39;中列出建信金融科技为前五大客户：2021年收入1,155.33万元、2022年收入1,168.43万元、2024年1-10月收入987.04万元（2023年未进入前五）；2) 财务尽调P53&#39;应收账款前五大&#39;显示：2021/12/31应收账款613.40万元、2022/12/31应收账款428.69万元；3) 财务尽调P33&#39;前10大合同&#39;中未列示建信金科合同。检索范围内未发现按客户维度列示的&#39;累计签约金额7,763万元、合同数量48个、合同单价162万元&#39;的对应数据。同时在建信金科各年收入合计（987+1,168+1,155=约3,310万元，仅三年可见数据）也与主张的7,763万元累计签约金额存在明显差距，但口径不一致（签约金额vs确认收入），需以合同台账数据为准。无法从现有尽调报告材料中验证该三项客户指标的原始数据来源。</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P44">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P44</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P53">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P53</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P33">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P33</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#18</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">江西省南昌市公安局累计签约金额5,487万元，合同数量12个，合同单价457万元</p>
+      <div class="src-chips"><span class="src-chip" title="江西省南昌市公安局 5,487 12 457">海致科技投决报告.pdf · P38</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">在已检索的海致科技财务尽调报告（pages 16, 20-50, 78）和海致科技法律尽调报告（pages 33, 35）中，关于江西省南昌市公安局的可见信息如下：
+1) 财务尽调报告 P44 客户变动分析中，2022年前5大客户列示南昌市公安局当年收入金额2,575.45万元；2021年、2023年、2024年1-10月的前5大客户中均未出现南昌市公安局。
+2) 财务尽调报告 P33 在手订单分析（前10大客户，统计截至2024年10月31日）未包含南昌市公安局，10笔合同合计10,864.76万元。
+3) 财务尽调报告 P34 大额销售合同主要条款列示的7份大额合同中也未包含南昌市公安局。
+4) 法律尽调报告 P33、P35涉及的是股权结构与子公司情况，与客户合同数据无关。
+5) 财务尽调报告 P78为软件著作权清单、P16为目标公司历史沿革，均与南昌市公安局合同数据无直接关联。
+关于主张的「累计签约金额5,487万元、合同数量12个、合同单价457万元」三项数据，文件库中均未找到能直接核验的来源。其中：累计签约金额5,487万元 / 合同数量12个 ≈ 457.25万元，与主张的合同单价457万元基本一致，数学上自洽；但财务尽调报告P44仅披露2022年南昌市公安局当年收入2,575.45万元，并未披露累计签约金额、合同数量等明细，且2024年前5大客户与前10大在手订单中均未出现南昌市公安局，与「累计5,487万元」的体量存在隐含矛盾（若是如此规模客户，2024年在手订单前10应可见其身影）。</p>
+      <details class="src-list"><summary>证据来源 · 5</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P44">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P44</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P33">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P33</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P34">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P34</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P33">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P33</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P35">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P35</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#19</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">青岛银行股份有限公司累计签约金额5,503万元，合同数量41个，合同单价134万元</p>
+      <div class="src-chips"><span class="src-chip" title="青岛银行股份有限公司 5,503 41 134">海致科技投决报告.pdf · P38</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已在两个尽调文档中进行多次检索：海致科技财务尽调报告（doc_id 3572f26f57e294c000f348cb06bdf192）检索页24（现金流量表）、页72（软件著作权清单）；海致科技法律尽调报告（doc_id fd2b7d62489d236bd4793762ffcdf545）检索页90（专利清单）、页97（软件著作权清单）。所有已检索页面均未涉及青岛银行股份有限公司的累计签约金额、合同数量或合同单价等客户合同数据。投决报告P38中列示的&#39;青岛银行股份有限公司 5,503 41 134&#39;这一客户级合同明细信息，在当前已检索的两个尽调文档中均未找到对应证据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P72">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P72</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P90">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P90</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P97">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P97</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#20</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2023年12月，AtlasGraph图数据库和计算产品成功打破世界纪录，将LDBC SNB Interactive基准测试成绩提高45%；在SF100和SF300数据集上无预计算情况下，2小时内完成约3.6亿次请求，QPS高达近4.9万，性能超过TigerGraph和Neo4j。</p>
+      <div class="src-chips"><span class="src-chip" title="2023 年 12 月 LDBC SNB Interactive 基准测试成绩提高 45%">海致科技投决报告.pdf · P30</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索的文件库仅包含两份文档：海致科技财务尽调报告（P24、P49）和海致科技法律尽调报告（P33、P35）。其中：
+1. 财务尽调报告P24为模拟现金流量表，不涉及AtlasGraph图数据库产品技术性能；
+2. 财务尽调报告P49为销售费用分析，不涉及LDBC基准测试；
+3. 法律尽调报告P33为股东信息表，不涉及产品技术参数；
+4. 法律尽调报告P35为子公司组织架构信息，不涉及基准测试成绩。
+上述所有已检索页面均未出现</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#21</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2023年9月8日，海致科技与高性能图计算院士工作站联合发布&quot;Atlas LLM知识图谱与大模型融合应用平台&quot;，运用知识图谱帮助大模型在企业级和工业界应用中克服&quot;幻觉&quot;，实现基于行业与场景的精准推演。</p>
+      <div class="src-chips"><span class="src-chip" title="2023年9月8日 Atlas LLM知识图谱与大模型融合应用平台">海致科技投决报告.pdf · P31</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告（doc_id: 3572f26f57e294c000f348cb06bdf192）和海致科技法律尽调报告（doc_id: fd2b7d62489d236bd4793762ffcdf545）。
+1. 财务尽调报告P43提到2023年目标公司开拓&quot;大模型融合产品市场&quot;，收入占当年比重的9.47%，但未提及具体发布日期、合作伙伴或产品名称&quot;Atlas LLM知识图谱与大模型融合应用平台&quot;。
+2. 财务尽调报告P45提到2023年新增大模型融合产品业务，但同样未涉及具体发布事件。
+3. 法律尽调报告P37提到目标集团拥有&quot;Atlas 知识图谱平台&quot;，以及计划推出&quot;Atlas-for-LLM&quot;和&quot;Atlas-with-LLM&quot;产品方向，与LLM与知识图谱融合的战略方向一致，但该处描述为&quot;计划推出&quot;而非已发布，且未提及2023年9月8日这一具体日期，也未提及&quot;高性能图计算院士工作站&quot;作为合作方。
+4. 法律尽调报告P100为软件著作权列表，未涉及该发布事件。
+关键缺失：
+- 未能验证发布日期&quot;2023年9月8日&quot;
+- 未能验证合作伙伴&quot;高性能图计算院士工作站&quot;
+- 未能验证具体产品名称&quot;Atlas LLM知识图谱与大模型融合应用平台&quot;
+- 未能验证&quot;克服幻觉&quot;和&quot;精准推演&quot;的具体功能描述</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P43">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P43</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P45">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P45</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P37">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P37</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P100">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P100</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#22</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">AtlasGraph基于图缩减和再划分的图计算方法相较PowerLyra性能最大提升118倍。</p>
+      <div class="src-chips"><span class="src-chip" title="基于图缩减和再划分的图计算方法相较PowerLyra性能最大提升118倍">海致科技投决报告.pdf · P29</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索全部可用文档（海致科技财务尽调报告.pdf、海致科技法律尽调报告.pdf），检索范围覆盖财务尽调P24-25（现金流量表、资产负债表）以及法律尽调P90、P95（专利清单、软件著作权清单）。所检索页面内容分别涉及：2021-2024年1-10月模拟现金流量表、主要资产科目占比、目标公司及子公司海象星图持有的发明专利清单（含图数据集生成的映射与存储方法、图计算系统节点动态访问策略的内存压缩方法等图计算相关专利）、软件著作权登记清单。检索结果中未出现AtlasGraph、图缩减、再划分、PowerLyra、性能对比、118倍等与该技术性能基准相关的任何内容。财务尽调报告与法律尽调报告均不涉及产品技术性能基准数据，无法验证或反驳该主张。AtlasGraph相对于PowerLyra的性能倍数属于产品技术白皮书/技术论文/官方测试报告范畴，而本次可用证据库中并不包含此类技术材料。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P25">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P25</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P90">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P90</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P95">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P95</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#23</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">AtlasGraph的细胞式批处理技术（BatchMaker）可以将序列网络和树状长短期记忆网络模型的延迟缩短17.5%-82.6%，同时吞吐量最多提升4倍。</p>
+      <div class="src-chips"><span class="src-chip" title="BatchMaker 延迟缩短17.5%-82.6% 吞吐量最多提升4倍">海致科技投决报告.pdf · P29</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索的证据来源包括：1) 海致科技财务尽调报告.pdf（doc_id: 3572f26f57e294c000f348cb06bdf192），P24内容为模拟现金流量表，P25内容为资产负债表科目占比，均为财务数据，未涉及AtlasGraph BatchMaker技术性能指标；2) 海致科技法律尽调报告.pdf（doc_id: fd2b7d62489d236bd4793762ffcdf545），P4内容为法律尽调说明，P19内容为员工服务期限与竞业限制情况，均为法律事项，未涉及AtlasGraph BatchMaker技术性能指标。文件库中未检索到任何包含AtlasGraph BatchMaker技术性能数据（延迟缩短17.5%-82.6%、吞吐量提升4倍）的页码。该技术性能数据属于技术尽调范畴，目前可用的财务尽调和法律尽调报告中均不涉及此类技术指标。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P25">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P25</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P4">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P4</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P19">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P19</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#24</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">AtlasGraph的高效NVM索引方法（ROART）相比其他基树或B+树，在lookup、insert、update、remove、scan操作上吞吐量都有所提升，其中insert、update操作的提升都在一倍以上，最高可达6.65倍。</p>
+      <div class="src-chips"><span class="src-chip" title="ROART 最高可达6.65倍">海致科技投决报告.pdf · P29</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索 doc_id: 3572f26f57e294c000f348cb06bdf192（海致科技财务尽调报告.pdf）第45-46页，以及 doc_id: fd2b7d62489d236bd4793762ffcdf545（海致科技法律尽调报告.pdf）第4页、第19页。检索到的内容分别为财务尽调中的营业收入/毛利率分析数据，以及法律尽调中的说明/员工竞业限制/差额补足安排等内容，**均不包含**任何关于AtlasGraph、ROART、NVM索引、B+树、吞吐量基准测试、6.65倍等技术性能数据的内容。当前可用的两个文件库文档库（财务尽调报告、法律尽调报告）属于财务与法律尽调范畴，不涉及技术性能基准数据，无法对该项技术主张提供支持或反驳证据。该技术主张的原始来源即为投决报告自身（page 29），未提供独立第三方技术尽调报告、学术论文或基准测试数据作为佐证。</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P45-46">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P45-46</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P4">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P4</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P19">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P19</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#25</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">AtlasGraph进件构图技术支持11大类、50+小类、10,000数据源的接入；智能决策技术实现预警准确率超过70%；演绎推理技术支持超20类关系、万亿级关系边数据的复杂图演绎推理。</p>
+      <div class="src-chips"><span class="src-chip" title="支持11大类，50+小类，10,000数据源的接入 预警准确率超过70%">海致科技投决报告.pdf · P27</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告（pages 50、58）与海致科技法律尽调报告（pages 34、52）的相关页码内容。其中：
+1. 财务尽调报告P58内容为其他应收款科目分析，与产品技术规格无关；
+2. 财务尽调报告P50内容为管理费用构成分析，与产品技术规格无关；
+3. 法律尽调报告P34内容为子公司列表及主营业务介绍，其中仅在海致集团主营业务中提及&#39;Atlas Graph超级资产管理平台&#39;等金融科技产品名称，未涉及11大类/50+小类/10,000数据源/预警准确率/万亿级关系边等具体技术指标；
+4. 法律尽调报告P52内容为历次增资明细表，与产品技术规格无关。
+已检索的两份尽调报告（财务尽调、法律尽调）均未包含AtlasGraph进件构图、智能决策、演绎推理等技术能力的具体量化指标。该项主张属于产品/技术类描述，需产品技术尽调报告或公司官方产品白皮书等材料交叉验证。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P50">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P50</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P58">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P58</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P34">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P34</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P52">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P52</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#26</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">图数据库K步邻居查询性能：K=1时AtlasGraph 40ms vs TigerGraph 249ms vs Neo4j 151ms；K=3时AtlasGraph 278ms vs TigerGraph 1498ms；K=5时AtlasGraph 4029ms vs TigerGraph 6798ms。</p>
+      <div class="src-chips"><span class="src-chip" title="K=1 K=3 K=5 40ms 278ms 4029ms">海致科技投决报告.pdf · P30</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已在海致科技财务尽调报告.pdf（P36、P40）和海致科技法律尽调报告.pdf（P4、P37）中进行检索。
+- P36（财务尽调）内容为图计算产业链定位与上中下游角色描述，未涉及K步邻居查询性能数据。
+- P40（财务尽调）内容为Atlas产品序列介绍（AtlasGraph图计算平台、图数据库、图模联合推理平台），提及</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#27</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">图数据库导入性能测试：AtlasGraph导入点100W/s、导入边80W/s；TigerGraph导入点59W/s、导入边60W/s（压力持续时间10小时，CPU使用率&lt;=70%）。</p>
+      <div class="src-chips"><span class="src-chip" title="导入点 100W/s 导入边 80W/s 59W/s 60W/s">海致科技投决报告.pdf · P30</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已在文件库中检索以下文档：
+1. 海致科技财务尽调报告.pdf（doc_id: 3572f26f57e294c000f348cb06bdf192）— 二次页码检索命中P45（营业收入毛利分析）、P58（其他应收款分析）等页码，均为财务数据内容，未涉及图数据库导入性能测试数据。
+2. 海致科技法律尽调报告.pdf（doc_id: fd2b7d62489d236bd4793762ffcdf545）— 二次页码检索命中P19（员工服务期限与竞业限制）、P66（合同违约条款）等页码，均为法务合规内容，未涉及图数据库导入性能测试数据。
+所有已检索页面的内容均与图数据库导入性能（AtlasGraph/TigerGraph 导入点边速率、压力测试时长、CPU使用率）无关。该项性能测试数据属于技术性能基准类信息，文件库中现有的财务尽调报告和法律尽调报告均不涵盖此类技术性能测试数据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P45">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P45</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P58">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P58</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P19">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P19</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P66">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P66</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#28</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2021年-2024年10月，公司每年签约订单超4亿元</p>
+      <div class="src-chips"><span class="src-chip" title="从2021年-2024年10月，公司每年签约订单超4亿元">海致科技投决报告.pdf · P35</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">在财务尽调报告中未直接提供2021年-2024年10月各年度的&#39;签约订单&#39;(新签合同金额)汇总数据。已检索的间接指标如下：
+1. 营业收入(财务尽调P23/P42):
+- 2021年度: 26,089.69万元(约2.6亿) / 26,274.12万元(口径差异)
+- 2022年度: 32,499.83万元(约3.2亿) / 32,180.25万元
+- 2023年度: 38,926.74万元(约3.9亿)
+- 2024年1-10月: 28,883.10万元(约2.9亿)
+2. 销售商品提供劳务收到的现金(P24):
+- 2021: 24,260.86万; 2022: 34,549.48万; 2023: 37,989.43万; 2024.1-10: 23,123.43万，均未达4亿
+3. 在手订单(P33，截至2024/10/31累计):
+- 执行中合同数量471个,客户235家
+- 前10大合同金额合计10,864.76万元(约1.09亿)
+- 未给出累计在手订单总金额
+关键区分:验证项中的&#39;签约订单&#39;指各年度新签合同金额，与财务尽调中的&#39;营业收入&#39;(按验收法确认)、&#39;销售收到现金&#39;(回款)及&#39;在手订单&#39;(累计未完成合同)均不属于同一口径。财务尽调报告未提供按年度汇总的新签合同金额数据，故无法直接核验&#39;每年签约订单超4亿元&#39;的主张。
+已检索范围:
+- 财务尽调P17-P50(财务概览、收入分析、客户分析、在手订单、营业成本等)
+- 法律尽调P19、P82(均不涉及订单数据)
+依据现有间接指标(营业收入2023年最高仅3.9亿，距4亿尚有约0.1亿差距)，公司2021-2024年10月各年营业收入均未超过4亿；但签约订单与营业收入口径不同，不能直接以营收作为反证。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P23">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P23</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P33">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P33</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P42">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P42</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#29</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">公司海致科技以公安业务为主、海致星图以金融业务为主，科技订单略高于星图</p>
+      <div class="src-chips"><span class="src-chip" title="海致科技更多的是以公安业务为主，海致星图以金融业务为主，科技订单略高于星图">海致科技投决报告.pdf · P35</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">从已检索证据来看：
+1) 关于</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#30</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2024年1-10月订单和去年同期持平；2023和2024年公司侧重考察项目毛利和利润而非订单金额</p>
+      <div class="src-chips"><span class="src-chip" title="2024年1-10月订单和去年同期持平；2023和2024年不再纯粹考察订单金额">海致科技投决报告.pdf · P35</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已在财务尽调报告(3572f26f57e294c000f348cb06bdf192)的第17-45页、第50页系统检索订单/在手订单数据。检索结果：
+1) 关于</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#31</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技与清华高性能计算机系联合开发图数据库核心技术，武永卫教授为&quot;海致-清华高性能图计算院士专家工作站&quot;负责人，清华大学计算机科学与技术系高性能计算研究所副所长。</p>
+      <div class="src-chips"><span class="src-chip" title="武永卫教授 海致-清华&quot;高性能图计算院士专家工作站&quot;负责人">海致科技投决报告.pdf · P25</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索 doc_id 3572f26f57e294c000f348cb06bdf192（海致科技财务尽调报告.pdf）第34、68页，以及 doc_id fd2b7d62489d236bd4793762ffcdf545（海致科技法律尽调报告.pdf）第100、101页。
+可获得的间接支持：
+1. 财务尽调报告P68的专利清单显示，专利序号20「一种分布式图数据库数据处理方法、介质和电子设备」(202111148939.9)的发明人列表中包含「武永卫」，专利权人为「北京海致科技集团有限公司」；专利序号21「一种图数据处理方法、装置、电子设备以及存储介质」(202111175074.5)的发明人同样包含「武永卫」。这间接表明武永卫参与了海致科技的图数据库相关专利研发，可侧面支持&quot;联合开发图数据库核心技术&quot;的表述。
+2. 法律尽调报告P100-101为软件著作权清单，未涉及&quot;院士专家工作站&quot;或武永卫头衔信息。
+未能核验的具体内容：
+1. &quot;海致-清华高性能图计算院士专家工作站&quot;这一机构名称及其存在性，在已检索的法律/财务尽调报告中未直接出现。
+2. 武永卫教授的具体头衔&quot;清华大学计算机科学与技术系高性能计算研究所副所长&quot;，在已检索证据中未直接列示。
+3. 法律尽调报告虽可能涉及关联方/合作方信息，但已检索页码范围内未命中该工作站或武永卫头衔的描述。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P68">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P68</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P100-101">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P100-101</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#32</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">金融行业客单价年平均在50-100万元左右，公安行业客单价平均约为250万元，其他行业平均客单价在120万元左右</p>
+      <div class="src-chips"><span class="src-chip" title="金融客单价年平均在50-100万元左右，公安行业客单价较高平均约为250万元，其他行业平均客单价在120万元左右">海致科技投决报告.pdf · P36</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索财务尽调报告(3572f26f57e294c000f348cb06bdf192) P32-40、P44,以及法律尽调报告(fd2b7d62489d236bd4793762ffcdf545) P16、P43。其中:
+- 财务尽调报告P32(未来发展规划)列出客户/合作方标识,但无分行业客单价数据;
+- 财务尽调报告P33(在手订单)列出前10大客户合同金额(2024年1-10月),其中公安机关7家合同金额合计约8,960.69万元,金融机构2家合计约1,304.07万元,政务非公安1家600万元,但未提供分行业客户数,无法计算行业客单价均值;
+- 财务尽调报告P34(大额销售合同主要条款)为单个合同条款,无客单价均值;
+- 财务尽调报告P35-40(商业模式/产业链分析)为定性描述,无具体客单价数值;
+- 财务尽调报告P44(客户变动分析)给出2021-2024年1-10月各年前5大客户收入金额,但未提供分行业的客户数量和客单价均值;
+- 法律尽调报告P16、P43内容为法规分析和税务,无相关数据。
+整个检索范围内未见任何分行业(金融/公安/其他)客单价均值或单客户年均收入的明确数据或表格,投决报告中该具体数值无法在尽调报告对应位置得到直接验证。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P32-40,44">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P32-40</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P16,43">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P16</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#33</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2023年4月，赛迪发布《2022年中国图数据库市场研究报告》，海致星图依托AtlasGraph入选2022年中国国产图数据库市场厂商竞争象限图领导者象限</p>
+      <div class="src-chips"><span class="src-chip" title="2023年4月，赛迪发布了聚焦中国图数据库市场的调研报告">海致科技投决报告.pdf · P17</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已在文件库（海致科技财务尽调报告.pdf、海致科技法律尽调报告.pdf）中检索与该主张相关的证据。当前可检索到的页面包括：财务尽调报告P24（现金流量表）、P42（营业收入按类型分析）；法律尽调报告P80（商标信息，包含AtlasGraph DB商标）、P109（域名信息）。其中法律尽调报告P80仅证明海致星图存在&quot;AtlasGraph DB&quot;商标，但与赛迪研究报告及竞争象限无关。文件库中未发现赛迪（CCID）发布的《2022年中国图数据库市场研究报告》原文或摘要，也未发现关于&quot;国产图数据库市场厂商竞争象限图领导者象限&quot;的相关描述。该主张属于外部第三方行业研究机构的评价，不在现有尽调文件覆盖范围内，无法在文件库内直接验证。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P42">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P42</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P109">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P109</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P80">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P80</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#34</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">公司知识图谱业务平均客单价100万元，行业渗透率15%，BottomUp测算市场规模超20亿元；2020年中国知识图谱潜在市场规模约23亿元</p>
+      <div class="src-chips"><span class="src-chip" title="根据目前公司知识图谱业务平均客单价100万元，行业渗透率15%进行BottomUp测算，整个市场规模超20亿元">海致科技投决报告.pdf · P15</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索文件库中的两份尽调材料：海致科技财务尽调报告（3572f26f57e294c000f348cb06bdf192）与海致科技法律尽调报告（fd2b7d62489d236bd4793762ffcdf545）。在二次检索中分别命中了财务尽调P68（专利清单）、P72（软著清单），以及法律尽调P34（子公司信息）、P36（融资历史），以上四页内容均不涉及知识图谱行业客单价、行业渗透率、BottomUp市场规模测算或2020年中国知识图谱潜在市场规模等市场行业数据。财务尽调报告与法律尽调报告作为尽调类材料，通常不包含行业市场规模或第三方研究数据。文件库中未见独立的行业研究/市场规模报告，因此对&#39;客单价100万元/渗透率15%/市场规模超20亿元/2020年潜在市场约23亿元&#39;等四项市场数据无法在现有尽调材料中找到直接支持或反驳的证据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P68">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P68</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P72">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P72</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P34">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P34</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P36">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P36</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#35</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">图数据库和知识图谱领域累积市场规模约30亿；大数据基础软件市场规模约260亿元，知识图谱平台超20亿元，图数据库约4亿元</p>
+      <div class="src-chips"><span class="src-chip" title="大数据基础软件市场规模约260亿元，知识图谱平台超20亿元，图数据库约4亿元">海致科技投决报告.pdf · P4</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索的文件库仅包含两份文档：海致科技财务尽调报告（3572f26f57e294c000f348cb06bdf192）和海致科技法律尽调报告（fd2b7d62489d236bd4793762ffcdf545）。检索内容包括P42（按类型营业收入明细）、P24（模拟现金流量表）、P103（软件著作权清单）、P11（子公司出资表），均未涉及图数据库、知识图谱或大数据基础软件等细分市场规模数据（260亿/30亿/20亿/4亿等）。财务尽调报告和律法尽调报告通常不收录行业市场规模信息，市场规模数据一般来源于第三方行业研究机构报告（如IDC、艾瑞、赛迪等）或投决文档自身引用的行业研究。文件库中未提供此类行业研究报告，因此无法验证投决报告P4中关于&#39;大数据基础软件市场规模约260亿元、知识图谱平台超20亿元、图数据库约4亿元、图数据库和知识图谱累积约30亿&#39;等市场数据的来源与准确性。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P42">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P42</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P103">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P103</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P11">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P11</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#36</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2023年中国中大型银行、保险、券商，大型工业企业，主要政府事业单位、运营商等潜在客户超过15,000家，假设知识图谱渗透率15%</p>
+      <div class="src-chips"><span class="src-chip" title="2023年中国中大型银行、保险、券商，大型工业企业，主要政府事业单位、运营商等，超过15,000家">海致科技投决报告.pdf · P15</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告P49-50（销售费用、管理费用分析）和海致科技法律尽调报告P34、P38（子公司信息、资质证书），但这些页面内容均与&#39;潜在客户超过15,000家&#39;这一市场规模/市场容量主张无关。财务尽调报告主要涉及公司自身的销售/管理费用结构，法律尽调报告主要涉及子公司股权架构和资质证书。当前文件库（财务尽调报告、法律尽调报告）中不包含中国中大型银行/保险/券商/工业企业/政府事业单位/运营商数量等外部行业统计数据，无法对15,000家潜在客户的总量估算进行直接交叉验证。验证项中标注的expected_evidence_type为&#39;其他&#39;，说明该主张的核验需要依赖外部公开统计资料（如银保监会、证监会、统计局、工信部等公布的数据），而非公司自身的财务或法律尽调文件。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P49-50">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P49-50</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P34, 38">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P34</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#37</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">据赛迪顾问2023年发布的《中国大数据市场研究年度报告》，中国大数据基础软件市场规模在2023年预期为266亿元</p>
+      <div class="src-chips"><span class="src-chip" title="据赛迪顾问2023年发布的《中国大数据市场研究年度报告》称，中国大数据基础软件市场规模在2023年预期为266亿元">海致科技投决报告.pdf · P15</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告（文件库_doc_id: 3572f26f57e294c000f348cb06bdf192）的P24和P42，分别涉及模拟现金流量表和营业收入按类型分析，未涉及赛迪顾问《中国大数据市场研究年度报告》或中国大数据基础软件市场规模266亿元的数据；已检索海致科技法律尽调报告（文件库_doc_id: fd2b7d62489d236bd4793762ffcdf545）的P84和P90，均为专利列表内容，与市场行业数据无关。文件库中未提供赛迪顾问原始报告或其他第三方行业研究文件作为佐证，无法核验266亿元这一市场数据的真实性与口径。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P42">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P42</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P84">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P84</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P90">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P90</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#38</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">根据IDC报告，2023年图数据库中国市场规模为4亿元</p>
+      <div class="src-chips"><span class="src-chip" title="根据IDC报告，2023年图数据库中国市场规模为4亿元">海致科技投决报告.pdf · P15</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索文件库中两份尽调报告以查找IDC关于2023年中国图数据库市场规模的数据：①海致科技财务尽调报告.pdf（P24、P52）——P24为模拟现金流量表（经营活动、投资活动、筹资活动现金流明细），P52为应收票据分析，均不涉及图数据库市场规模信息；②海致科技法律尽调报告.pdf（P7、P109）——P7为VIE架构及重组相关法律事项分析，P109为目标集团域名清单，均不涉及图数据库市场规模信息。文件库中未收录IDC原始报告或其他第三方市场研究材料，财务尽调与法律尽调报告均属于公司层面尽调文件，天然不包含外部行业市场容量数据。因此当前文件库中既无支持该4亿元数字的证据，也无反驳该数字的证据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P24">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P24</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P52">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P52</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P7">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P7</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P109">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P109</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#39</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致入选Gartner《2023中国数据库市场指南》《2023中国分析平台市场指南》《2023中国人工智能软件市场指南》代表厂商</p>
+      <div class="src-chips"><span class="src-chip" title="入选Gartner《2023中国数据库市场指南》代表厂商……《2023中国分析平台市场指南》……《2023中国人工智能软件市场指南》">海致科技投决报告.pdf · P40</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">在财务尽调报告P15目标公司发展历程中,仅查到2022年一项Gartner相关记录:&#39;入选Gartner《中国数据库管理系统供应商甄选报告》&#39;。该报告名称与投决报告所称《2023中国数据库市场指南》不一致,且年份为2022年而非2023年。财务尽调报告发展历程仅截至2022年,未覆盖2023年Gartner相关入选信息。法律尽调报告P89、P108内容为专利及软件著作权清单,与Gartner入选无直接关联。已检索的doc_id包括3572f26f57e294c000f348cb06bdf192(海致科技财务尽调报告.pdf)P15、P16、P74,以及fd2b7d62489d236bd4793762ffcdf545(海致科技法律尽调报告.pdf)P89、P108,均未发现与《2023中国数据库市场指南》《2023中国分析平台市场指南》《2023中国人工智能软件市场指南》三份2023年Gartner报告对应的入选证据。</p>
+      <details class="src-list"><summary>证据来源 · 5</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P15">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P15</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P16">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P16</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P74">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P74</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P89">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P89</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P108">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P108</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#40</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">竞争对手技术对比：Neo4j使用JAVA；TigerGraph、Nebula采用C++语言，运行速度慢；Neo4j、TigerGraph在传统单机版本上改造，分布式支持很差；Nebula面向分布式设计但底层优化不够性能较差</p>
+      <div class="src-chips"><span class="src-chip" title="Neo4j使用JAVA，TigerGraph、Nebula采用C++语言，运行速度慢">海致科技投决报告.pdf · P16</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告.pdf（doc_id: 3572f26f57e294c000f348cb06bdf192）和海致科技法律尽调报告.pdf（doc_id: fd2b7d62489d236bd4793762ffcdf545）中关于竞品技术对比的相关内容。具体检索结果如下：
+1. 财务尽调报告P40提到海致自身产品AtlasGraph为&quot;国内首款基于Rust的新一代云原生分布式图数据库&quot;，属于海致自身产品介绍，未涉及Neo4j/TigerGraph/Nebula的技术对比。
+2. 财务尽调报告P34为大额销售合同条款，与竞争对手技术对比无关。
+3. 法律尽调报告P37竞争介绍部分提到目标集团产品布局（Atlas知识图谱、Metis、AtlasGraph图数据库等），但未对Neo4j、TigerGraph、Nebula的编程语言、运行速度、分布式架构支持等做技术对比。
+4. 法律尽调报告P20为技术开发合同内容，与竞品对比无关。
+在已检索的两份尽调报告（财务尽调报告、法律尽调报告）所有相关页面中，均未发现对Neo4j使用JAVA、TigerGraph/Nebula使用C++、三者运行速度与分布式架构性能差异的对比分析或佐证材料。投决报告P16原文的具体竞品技术对比主张在现有文件库中无独立第三方或尽调材料可验证。</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P40">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P40</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P37">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P37</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P20">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P20</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#41</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">竞争对手融资情况：TigerGraph于2012年成立，2019年B轮3,200万美元（SIG领投，华创资本、海松资本跟投），2021-02-17完成1.05亿美元C轮融资（投资方Tiger Global Management）；Neo4j于2007年商业化，2021年完成3.9亿美元F+轮融资；创邻科技于2016年成立，2021年完成过亿元A+轮融资</p>
+      <div class="src-chips"><span class="src-chip" title="TigerGraph于2012年成立，2021年完成1.05亿美元C轮融资；Neo4j于2007年商业化，2021年完成3.9亿美元F+轮融资">海致科技投决报告.pdf · P16</span><span class="src-chip" title="C轮 2021-02-17 1.05亿美元 Tiger Global Management；B轮 3,200万美元 SIG领投，华创资本、海松资本跟投">海致科技投决报告.pdf · P18</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索的文档为海致科技财务尽调报告（P15、P67）和海致科技法律尽调报告（P19、P81）。P15为海致科技自身发展历程（2013年A轮到2022年D轮），P67为海致科技自身专利清单，P81为海致科技已授权专利清单，P19为员工服务期限与竞业限制及目标集团与第三方差额补足安排的法律分析。以上四个页面的内容均围绕海致科技自身的发展沿革、知识产权、劳动合规及对赌安排展开，未涉及TigerGraph、Neo4j、创邻科技等竞争对手的成立时间或融资轮次、金额、投资方等信息。当前文件库中可检索的尽调报告（财务尽调、法律尽调）并非竞品融资信息核验的适当来源，需依赖外部公开资料（如Crunchbase、IT桔子、企查查、PitchBook等）进行独立交叉验证。本验证项在已有文件库中证据不足。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P15">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P15</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P67">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P67</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P19">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P19</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P81">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P81</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-indigo"><span class="chip-dot"></span>团队治理</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#42</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技董事会目前共设置7人，其中4名董事为创始人委派（任旭阳、杨再飞、万澎江、杨娟），1名为贝塔斯曼委派（龙宇），1名为君联资本委派（李家庆），1名为中网投委派（李洪涛）</p>
+      <div class="src-chips"><span class="src-chip" title="公司董事会目前共设置7人，其中4名董事为创始人委派">海致科技投决报告.pdf · P24</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技法律尽调报告（页10-30、30-50、58、50）以及海致科技财务尽调报告（页8、69）。
+部分支持证据：
+1. 法律尽调报告P12提及：创始股东2021年3月2日签署《一致行动协议》，并指出</p>
+      
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-indigo"><span class="chip-dot"></span>团队治理</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#43</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">郑纬民院士为海致科技首席科学家，中国工程院院士，清华大学计算机系高性能所前所长；获国家科技进步一等奖1项、二等奖2项、国家技术发明二等奖1项、何梁何利科技进步奖。</p>
+      <div class="src-chips"><span class="src-chip" title="郑纬民院士 首席科学家 中国工程院院士 清华大学计算机系高性能所前所长">海致科技投决报告.pdf · P25</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">本次核验在所提供的两份 文件库 文档（海致科技财务尽调报告、海致科技法律尽调报告）中均未检索到任何关于郑纬民院士个人简介、学术头衔、曾任职务或获奖记录的内容。已检索的关键页包括：财务尽调报告 P27（资产负债表与负债结构）、P81（其他收益明细，含清华大学转入的专项国拨经费20.7万元的间接提及，但未涉及郑纬民个人）；法律尽调报告 P4（报告说明）、P19（员工服务期限与差额补足安排，仅在 P19 末尾提及&#39;郑[文字不清]与员工每年在目标集团工作时间不少于3个月&#39;，因 OCR 模糊且为法律协议中的姓名引用，无法证实其院士身份或学术荣誉）。该声明属个人履历类信息，财务与法律尽调报告通常不收录详细的学术头衔与获奖记录，本核验范围内缺乏直接证据来源。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P27">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P27</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P81">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P81</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P4">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P4</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P19">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P19</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-slate"><span class="chip-dot"></span>其他</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#44</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">中国电子技术标准化研究院文本分类测评结果：单层级LLM准确率67%、KG+LLM准确率93%；多层级LLM准确率31%、KG+LLM准确率56%</p>
+      <div class="src-chips"><span class="src-chip" title="文本分类-单层级 67% 93%；文本分类-多层级 31% 56%">海致科技投决报告.pdf · P13</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索的文件库中仅包含两份尽调报告（海致科技财务尽调报告、海致科技法律尽调报告），未发现投决报告原文，也未在已检索页（财务尽调P45-46毛利分析、法律尽调P34股东信息、P37竞争分析）中发现任何关于&quot;中国电子技术标准化研究院文本分类测评&quot;的具体数据。其中：①财务尽调P45-46仅含营业收入/毛利率分析，与文本分类准确率无关；②法律尽调P37虽提及LLM与知识图谱融合技术（Atlas-with-LLM），但未引用中国电子技术标准化研究院的测评数据，也未出现67%、93%、31%、56%等数值。已检索的证据文件均不支持该主张。</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P45-46">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P45-46</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P34">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P34</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P37">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P37</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-slate"><span class="chip-dot"></span>其他</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#45</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">根据中国电子技术标准化研究院的测评，以智谱的ChatGLM-6B为基准，知识图谱赋能结果相较于仅使用LLM，在知识抽取、文本分类、智能问答任务中改善程度分别为+14%、+26%、+29%</p>
+      <div class="src-chips"><span class="src-chip" title="以智谱的ChatGLM-6B为基准，知识图谱的赋能结果相较于仅使用LLM输出的结果，在知识抽取、文本分类、智能问答任务中，改善的程度分别为+14%、+26%、+29%">海致科技投决报告.pdf · P13</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索海致科技财务尽调报告（P43、P46）和海致科技法律尽调报告（P4、P37），均未涉及中国电子技术标准化研究院的测评内容，也未出现ChatGLM-6B基准对比、+14%/+26%/+29%改善幅度等数据。其中财务尽调P43为营业收入按类型分析（涉及DMC&amp;图谱、知识图谱等产品线收入占比），P46为毛利率分析（产品线及行业维度）；法律尽调P4为报告说明，P37为竞争情况介绍（涉及目标集团知识图谱/图数据库产品及Atlas-for-LLM/Atlas-with-LLM规划）。上述内容与验证项所称的中国电子技术标准化研究院对KG+LLM的量化测评无关。可用的两份尽调报告（财务+法律）中均未检索到支持或反驳该主张的直接证据。投决报告原文页（P13）本身包含该主张，但未在文件库对应证据中交叉验证；可能需视觉读取投决报告原文页上下文或寻找包含测评报告原文的其他佐证材料。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P43">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P43</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P46">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P46</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P37">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P37</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P4">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P4</span>
+</div></div></details>
+    </section>
+  </div>
+</article></div>
+</details></div>
+</details>
+<details id="detail-r1" class="section" open>
+  <summary class="section-head"><span>R1 低风险（共 15 项）</span></summary>
+  <div class="section-body"><div class="vcards"><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-violet"><span class="chip-dot"></span>融资数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#1</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">B轮：2014年9月，币种美元，融资金额1000万，投后估值1亿，投资方高瓴资本、Formation8、五源资本、IDG</p>
+      <div class="src-chips"><span class="src-chip" title="B轮 2014年9月 美元 1000万 1亿 高瓴资本、Formation8、五源资本、IDG">海致科技投决报告.pdf · P3</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P15&quot;目标公司发展历程&quot;表显示：2014年&quot;完成B轮融资，高瓴、IDG、五源联合注资&quot;。该条目仅确认了B轮发生在2014年、投资方包含高瓴、IDG、五源三家，但未提及具体月份（9月）、币种（美元）、融资金额（1000万）、投后估值（1亿），也未提及Formation8。法律尽调报告P5-8的内容主要涉及VIE架构、境外重组、社保安排等，未涉及B轮融资的具体金额、币种、估值等细节。综上：年份（2014）和三家投资方（高瓴、IDG、五源）得到部分确认；Formation8在已检索证据中未被提及；具体月份、币种、金额、估值均无证据支持或反驳。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P15">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P15</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P5-8">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P5-8</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-violet"><span class="chip-dot"></span>融资数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#2</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技累计融资超12亿元，典型投资机构包括君联、IDG、贝塔斯曼、中网投、高瓴、上海国和、上海金浦等</p>
+      <div class="src-chips"><span class="src-chip" title="累计融资超12亿元">海致科技投决报告.pdf · P22</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">【投资机构验证——全部成立】财务尽调报告P6-8股东名册及P15发展历程证实以下七家机构均为海致科技股东/历轮投资方：(1) 君联——通过君萃有限公司、苏州君联相道、苏州君骏德、厦门君联逸禾、西安君联海盈等多个主体合计持股约16.56%；(2) IDG——天清有限公司（SKY FINE LIMITED）持股5.66%，并在A/B/C轮连续注资；(3) 贝塔斯曼（BAI）——贝塔斯曼亚洲投资基金（BAI GmbH）持股7.58%，为A轮投资方；(4) 中网投——中国互联网投资基金（有限合伙）持股3.64%，为D轮领投方；(5) 高瓴——高瓴海钦香港控股有限公司持股2.96%，在B轮和C+轮注资；(6) 上海国和——上海国和三期现代服务业股权投资基金合伙企业持股1.34%；(7) 上海金浦——上海金融科技股权投资基金（有限合伙）持股0.67%。【累计融资金额验证——证据不足】财务尽调报告P15发展历程仅列示了各轮次（A轮2013、B轮2014、C轮2016、C+轮2021、D轮2022）的主要投资方名称，但未披露各轮具体融资金额及累计融资总额；P16历史沿革中仅披露注册资本变化（如2023年7月由1851.59万元增至3159.66万元），未直接给出累计融资额。法律尽调报告P101-102为软件著作权信息，与融资数据无关。已检索 doc_id: 3572f26f57e294c000f348cb06bdf192（财务尽调报告P6-8, P15-16）、fd2b7d62489d236bd4793762ffcdf545（法律尽调报告P101-102），均未找到关于&#39;累计融资超12亿元&#39;的直接数据。综上，投决报告所列7家典型投资机构均得到充分证实，但&#39;累计融资超12亿元&#39;这一具体金额在现有尽调材料中无直接数据支持。</p>
+      <details class="src-list"><summary>证据来源 · 5</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P6">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P6</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P7">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P7</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P8">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P8</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P15">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P15</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P16">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P16</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>公司数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#3</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技主要产品包括SmartData数据智能产品（DMC数据智能分析平台、元数据知识图谱平台、孔明智能问答平台）和Atlas产品序列（AtlasGraph国产分布式云原生实时并行图数据库、AtlasLLM图模孪生智能平台）</p>
+      <div class="src-chips"><span class="src-chip" title="AtlasGraph，是全球唯一采用Rust编程语言完成数据库内核的图数据库">海致科技投决报告.pdf · P22</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索证据如下：
+1. 海致科技财务尽调报告.pdf P41 明确列示了「Smart Data产品序列」下三大产品：孔明智能问答平台、元数据知识图谱平台、DMC数据智能平台，与投决报告中SmartData产品系列下的DMC数据智能分析平台、元数据知识图谱平台、孔明智能问答平台三者名称完全吻合。
+2. 海致科技法律尽调报告.pdf P78 商标信息表显示，AtlasGraph（ATLASGRAPH）商标已在第35、36、38、42、45类注册，申请日期2021/9/27，注册日期2022/3/28，权利人为海峡星图（即海致科技体系内主体），与投决报告所述AtlasGraph产品归属一致。
+3. 海致科技法律尽调报告.pdf P100 软件著作权登记表列示了多项海致科技DMC系列产品著作权（如DMC Graph图分析知识图谱分析平台V3.0等），与DMC数据智能平台存在著作权对应关系。
+4. 关于投决报告所述「AtlasGraph国产分布式云原生实时并行图数据库」的具体技术描述，以及「AtlasLLM图模孪生智能平台」产品的具体名称与技术描述，在本次检索到的财务尽调报告和法律尽调报告页码中均未直接命中相关原文。AtlasLLM产品在已检索证据中未找到对应记载。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P41">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P41</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P42">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P42</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P78">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P78</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P100">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P100</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#4</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">公司2023年以前收入增长每年超过20%，预计2024年实现盈利</p>
+      <div class="src-chips"><span class="src-chip" title="公司2023年以前收入增长每年超过20%，预计2024年实现盈利">海致科技投决报告.pdf · P4</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">根据财务尽调报告P23模拟利润表，各年度营业收入为：2021年26,089.69万元、2022年32,499.83万元、2023年38,926.74万元、2024年1-10月28,883.10万元。计算同比增长率：2022年（vs 2021）= (32,499.83-26,089.69)/26,089.69 = 24.57%，超过20%；2023年（vs 2022）= (38,926.74-32,499.83)/32,499.83 = 19.78%，未超过20%（差0.22个百分点）。2021年同比增长率因缺少2020年数据无法验证（尽调报告P29注明&#39;项目组未取得2020年管理层报表&#39;）。关于2024年盈利预期，尽调报告P23显示2024年1-10月净利润为-1,341.39万元（仍为亏损），且尽调报告P23明确说明&#39;由于公司属于业务扩张阶段，前期主要为各费用投入，且存在部分项目未验收情况，故仍为亏损阶段&#39;，报告未明确给出2024年全年盈利预测。投决报告中的&#39;2024年实现盈利&#39;属于前瞻性预测/管理层预期，但实际2024年1-10月仍为亏损状态。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P23">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P23</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P29">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P29</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>法务合规</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#5</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">公司全称为北京海致科技集团有限公司，注册地为北京市海淀区</p>
+      <div class="src-chips"><span class="src-chip" title="公司名称：北京海致科技集团有限公司 注册地：北京市海淀区">海致科技投决报告.pdf · P3</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">1）公司法定全称部分已被充分佐证：财务尽调报告封面（P1）明确为&#39;北京海致科技集团有限公司&#39;；P2正文明确&#39;我们近期已完成了对北京海致科技集团有限公司（以下简称&quot;海致科技&quot;或&quot;目标公司&quot;）……&#39;；P4目标公司列表中第一行&#39;北京海致科技集团有限公司 / 海致科技 / 2013-08-23&#39;；P16历史沿革表记载&#39;2021年5月 北京海智网聚信息技术有限公司更名为北京海致科技集团有限公司&#39;，多源一致确认公司全称。2）注册地&#39;北京市海淀区&#39;部分在已检索的财务尽调报告P1-6、P16及法律尽调报告P1-8中均未找到直接文字证据。法律尽调报告P4提及&#39;北京绿[无法辨认]集团有限公司&#39;，文字部分因红色印章/扫描问题存在识别障碍，无法直接确认注册地为海淀区。子公司名称（如&#39;海致网络技术（北京）有限公司&#39;、&#39;海致合众网络技术（北京）有限公司&#39;）含&#39;北京&#39;字样，但未明确具体行政区。综上：公司全称&#39;北京海致科技集团有限公司&#39;得到充分证据支持（一致）；注册地&#39;北京市海淀区&#39;在已检索范围内无直接证据支持（证据不足）。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P1">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P1</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P2">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P2</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P4">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P4</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P16">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P16</span>
+</div></div></details>
+    </section>
+  </div>
+</article></div>
+<details class="vcards-group" >
+  <summary>一致项 · 12</summary>
+  <div class="vcards"><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#1</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2021-2024.1-10应付账款分别为5,022万元、14,460万元、8,240万元、11,351万元</p>
+      <div class="src-chips"><span class="src-chip" title="应付账款 5,022 14,460 8,240 11,351">海致科技投决报告.pdf · P45</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已在海致科技财务尽调报告 P31 「4.2 报表分析—营运能力」表格中检索到应付账款四期余额列示,期间与数值完全一致:
+- 2021.12.31 应付账款 = 5,022 万元(对应验证项 2021)
+- 2022.12.31 应付账款 = 14,460 万元(对应验证项 2022)
+- 2023.12.31 应付账款 = 8,240 万元(对应验证项 2023)
+- 2024.10.31 应付账款 = 11,351 万元(对应验证项 2024.1-10)
+四个期间-数值与投决报告完全匹配,无差异。期间映射:验证项中&quot;2024.1-10&quot;对应证据中&quot;2024.10.31&quot;(即截至 2024 年 10 月 31 日的资产负债表日余额),口径一致。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P31">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P31</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#2</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2021-2024.1-10应收账款分别为8,854万元、10,828万元、12,881万元、21,668万元；预付款项分别为3,152万元、9,351万元、730万元、691万元</p>
+      <div class="src-chips"><span class="src-chip" title="应收账款 8,854 10,828 12,881 21,668；预付款项 3,152 9,351 730 691">海致科技投决报告.pdf · P45</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P31的营运能力分析表中（表头按时间倒序排列：2024.10.31 | 2023.12.31 | 2022.12.31 | 2021.12.31）列示了各期末数据：应收账款 2021.12.31=8,854万元、2022.12.31=10,829万元、2023.12.31=12,881万元、2024.10.31=21,668万元；预付账款 2021.12.31=3,152万元、2022.12.31=9,351万元、2023.12.31=730万元、2024.10.31=691万元。期间-指标映射与投决报告完全一致，唯一差异为2022年应收账款：投决报告写10,828万元，尽调报告为10,829万元，差1万元，属于约数/四舍五入精度差异。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P31">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P31</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#3</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2021-2024.1-10销售费用分别为10,735万元、10,605万元、8,992万元、5,379万元；税金及附加分别为133万元、247万元、222万元、201万元</p>
+      <div class="src-chips"><span class="src-chip" title="税金及附加 133 247 222 201；销售费用 10,735 10,605 8,992 5,379">海致科技投决报告.pdf · P42</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">内部期间-数值映射核验：
+1) 销售费用（万元）：
+- 2021年度：投决报告10,735 vs 财务尽调报告10,734.68 → 四舍五入一致
+- 2022年度：投决报告10,605 vs 财务尽调报告10,605.41 → 四舍五入一致
+- 2023年度：投决报告8,992 vs 财务尽调报告8,991.55 → 四舍五入一致
+- 2024年1-10月：投决报告5,379 vs 财务尽调报告5,379.03 → 四舍五入一致
+2) 税金及附加（万元）：
+- 2021年度：投决报告133 vs 财务尽调报告133.02 → 四舍五入一致
+- 2022年度：投决报告247 vs 财务尽调报告246.76 → 四舍五入一致
+- 2023年度：投决报告222 vs 财务尽调报告222.23 → 四舍五入一致
+- 2024年1-10月：投决报告201 vs 财务尽调报告200.97 → 四舍五入一致
+期间绑定与列头顺序均与原文利润表（2024年1-10月 / 2023年度 / 2022年度 / 2021年度）一致，数值在四舍五入精度内完全吻合。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P23">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P23</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#4</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">存货余额2024/10/31为24,334.52万元，2023/12/31为20,282.53万元；其中未签约余额分别为4,424.04万元（18.18%）、2,269.13万元（11.19%）；公共项目余额分别为781.44万元（3.21%）、766.11万元（3.78%）；作废项目余额分别为813.85万元（3.34%）、793.07万元（3.91%）</p>
+      <div class="src-chips"><span class="src-chip" title="存货余额 24,334.52 100.00% 20,282.53 100.00%；未签约 4,424.04 18.18% 2,269.13 11.19%">海致科技投决报告.pdf · P47</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">在海致科技财务尽调报告P59「4.12 主要报表科目分析—存货」中，表1「存货余额对应签约情况」明确列示了2024年10月31日和2023年12月31日两个时点的存货余额构成明细：
+- 存货余额：2024/10/31为24,334.52万元（100.00%），2023/12/31为20,282.53万元（100.00%）
+- 已签约：18,315.18万元（75.26%）、16,454.23万元（81.13%）
+- 未签约：4,424.04万元（18.18%）、2,269.13万元（11.19%）
+- 公共项目：781.44万元（3.21%）、766.11万元（3.78%）
+- 作废项目：813.85万元（3.34%）、793.07万元（3.91%）
+期间-数值映射一致：投决报告P47所列全部数字（总额、未签约、公共项目、作废项目的金额与占比）均与财务尽调报告P59的表1完全一致，两列数据分别对应2024/10/31和2023/12/31，顺序和占比口径无误。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P59">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P59</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#5</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2022/12/31和2021/12/31账龄1年以内应收账款余额分别为5,651.24万元、4,426.04万元；1-2年余额分别为1,624.69万元、5,165.94万元；2022/12/31账龄2-3年余额5,711.03万元</p>
+      <div class="src-chips"><span class="src-chip" title="2022/12/31 5,651.24 / 1,624.69 / 5,711.03；2021/12/31 4,426.04 / 5,165.94">海致科技投决报告.pdf · P46</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P57&quot;4.10 主要报表科目分析—应收账款—模拟计提坏账&quot;表格明确列示了各期末各账龄段应收账款余额（单位：万元）：
+| 项目 | 2024/10/31 | 2023/12/31 | 2022/12/31 | 2021/12/31 |
+|---|---:|---:|---:|---:|
+| 1年以内 | 17,280.25 | 9,160.44 | 5,651.24 | 4,426.04 |
+| 1-2年 | 5,834.78 | 2,064.80 | 1,624.69 | 5,165.94 |
+| 2-3年 | - | 2,193.25 | 5,711.03 | - |
+| 小计 | 23,115.03 | 14,995.99 | 12,986.96 | 9,591.98 |
+期间映射与逐项核验：
+- 2022/12/31 账龄1年以内：投决报告5,651.24万元 vs 尽调报告5,651.24万元 → 一致
+- 2022/12/31 账龄1-2年：投决报告1,624.69万元 vs 尽调报告1,624.69万元 → 一致
+- 2022/12/31 账龄2-3年：投决报告5,711.03万元 vs 尽调报告5,711.03万元 → 一致
+- 2021/12/31 账龄1年以内：投决报告4,426.04万元 vs 尽调报告4,426.04万元 → 一致
+- 2021/12/31 账龄1-2年：投决报告5,165.94万元 vs 尽调报告5,165.94万元 → 一致
+合计校验：2022/12/31应收账款合计=5,651.24+1,624.69+5,711.03=12,986.96万元（与尽调报告小计一致）；2021/12/31合计=4,426.04+5,165.94=9,591.98万元（与尽调报告小计一致）。所有数据完全匹配，账龄-期间-数值绑定正确。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P57">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P57</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#6</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技2022年、2023年、2024年1-10月净利润分别为-1.17亿元、-616万元和-1,341万元（投决报告P3与P22两处出现）</p>
+      <div class="src-chips"><span class="src-chip" title="净利润分别为-1.17亿元，-616万元和-1,341万元">海致科技投决报告.pdf · P3</span><span class="src-chip" title="净利润分别为-1.17亿元，-616万元和-1,341万元">海致科技投决报告.pdf · P22</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P23「3.2 财务概览—模拟利润表」显示：
+- 2022年度净利润 = -11,734.57万元 ≈ -1.17亿元
+- 2023年度净利润 = -615.89万元 ≈ -616万元
+- 2024年1-10月净利润 = -1,341.39万元 ≈ -1,341万元
+期间映射核验：
+| 期间 | 投决报告主张 | 财务尽调报告原文 | 差异 |
+|---|---|---|---|
+| 2022年度 | -1.17亿元 | -11,734.57万元 | -1.17亿元 ≈ -1.17亿元（一致） |
+| 2023年度 | -616万元 | -615.89万元 | 四舍五入差异，约0.02% |
+| 2024年1-10月 | -1,341万元 | -1,341.39万元 | 四舍五入差异，约0.03% |
+所有三个期间的净利润数值在对应期间的口径下均与财务尽调报告中的模拟利润表数据完全一致，差异仅为四舍五入精度。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P23">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P23</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#7</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技2022年、2023年、2024年1-10月收入分别为3.25亿元、3.89亿元和2.88亿元（投决报告P3与P22两处出现）</p>
+      <div class="src-chips"><span class="src-chip" title="2022年-2024年10月收入分别为3.25亿，3.89亿和2.88亿元">海致科技投决报告.pdf · P3</span><span class="src-chip" title="2022年-2024年10月收入分别为3.25亿，3.89亿和2.88亿元">海致科技投决报告.pdf · P22</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">内部期间映射核对：
+- 指标：营业收入（人民币万元，财务尽调报告模拟利润表口径）
+- 2022年度：财务尽调报告P23模拟利润表显示 32,499.83万元 = 3.249983亿元，约为3.25亿元 → 与投决报告3.25亿元一致
+- 2023年度：财务尽调报告P23模拟利润表显示 38,926.74万元 = 3.892674亿元，约为3.89亿元 → 与投决报告3.89亿元一致
+- 2024年1-10月：财务尽调报告P23模拟利润表显示 28,883.10万元 = 2.88831亿元，按四舍五入应为2.89亿元，投决报告取2.88亿元（向下取整），差异约30万元，比例约0.10%，属典型四舍五入精度差异，不影响金额数量级。
+三个期间-数值绑定顺序与原文列头一致（2022年度→32,499.83万元；2023年度→38,926.74万元；2024年1-10月→28,883.10万元）。
+结论：核心数字一致，仅2024年1-10月因四舍五入方向不同存在0.10%以内的精度差异（2.88亿 vs 2.89亿），不构成实质性差异。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P23">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P23</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#8</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2021-2024.1-10营业成本分别为13,006万元、16,594万元、18,391万元、17,010万元；同期毛利分别为13,084万元、15,906万元、20,535万元、11,873万元</p>
+      <div class="src-chips"><span class="src-chip" title="减：营业成本 13,006 16,594 18,391 17,010；毛利 13,084 15,906 20,535 11,873">海致科技投决报告.pdf · P42</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">经检索海致科技财务尽调报告.pdf第23页『3.2 财务概览—模拟利润表』,期间序列为2021年度、2022年度、2023年度、2024年1-10月(与投决报告claim的期间顺序一致),列示数据如下(单位:人民币万元):
+- 营业成本: 2021年度 13,005.58, 2022年度 16,593.82, 2023年度 18,391.28, 2024年1-10月 17,010.09
+- 毛利: 2021年度 13,084.11, 2022年度 15,906.01, 2023年度 20,535.46, 2024年1-10月 11,873.01
+投决报告claim的四组营业成本(13,006/16,594/18,391/17,010)分别对应尽调报告的13,005.58/16,593.82/18,391.28/17,010.09,均为四舍五入至万元的整数,差异在1万元以内(相对误差&lt;0.01%),期间绑定与数值绑定完全一致。
+投决报告claim的四组毛利(13,084/15,906/20,535/11,873)分别对应尽调报告的13,084.11/15,906.01/20,535.46/11,873.01,同样为四舍五入至万元的整数,期间与数值绑定完全一致。
+补充说明:财务尽调报告第45页『按业务类型毛利分析』中『营业成本合计』为17,010.09(2024.1-10)/18,334.15(2023)/16,508.22(2022)/13,134.25(2021),系按业务大类(主营业务成本+其他业务成本)汇总的分部数据,与模拟利润表的合并营业成本口径不同(2023年差异57.13万元,2022年差异85.60万元,2021年差异128.67万元)。投决报告使用的是第23页模拟利润表(合并报表)口径,该口径为标准的合并利润表口径,与公司财务报告主体一致;两版营业成本差异系因分部小计未包含全部调整项(如其他业务成本细分、调整分录等),不构成对投决报告主张的反证。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P23">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P23</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-indigo"><span class="chip-dot"></span>团队治理</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#9</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">持有海致科技5%以上股权的股东还包括君联资本、贝塔斯曼、IDG</p>
+      <div class="src-chips"><span class="src-chip" title="持有海致科技5%以上股权的股东还包括君联资本、贝塔斯曼、IDG">海致科技投决报告.pdf · P23</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">根据《海致科技财务尽调报告》第6-7页的股权结构表，持股5%以上的股东逐一确认如下：
+1）贝塔斯曼——通过&quot;贝塔斯曼亚洲投资基金（BAI GmbH）&quot;持股7.58%，性质标注为&quot;贝塔斯曼&quot;，✓高于5%；
+2）君联资本——通过&quot;君萃有限公司&quot;持股6.47%、&quot;苏州君联相道股权投资合伙企业（有限合伙）&quot;持股6.25%，性质均标注为&quot;君联（合计超10%）&quot;，单一主体均已超过5%；
+3）IDG——通过&quot;天清有限公司（SKY FINE LIMITED）&quot;持股5.66%，性质标注为&quot;IDG&quot;，✓高于5%。
+此外股权结构图（P8）进一步显示君联合计16.56%、IDG与法定代表人杨再飞并列。
+投决报告中所述&quot;持有海致科技5%以上股权的股东还包括君联资本、贝塔斯曼、IDG&quot;与财务尽调报告披露的股权信息完全吻合。</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P6">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P6</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P7">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P7</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P8">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P8</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-indigo"><span class="chip-dot"></span>团队治理</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#10</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">海致科技实际控制人为任旭阳及杨再飞，二人通过直接持股及ESOP平台控制海致科技超过30%以上表决权</p>
+      <div class="src-chips"><span class="src-chip" title="实际控制人为任旭阳及杨再飞，控制海致科技超过30%以上的表决权">海致科技投决报告.pdf · P23</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告P6-7列示海致科技现有股权结构：任旭阳直接持股215.60万元(6.74%，标注&#39;受益所有人&#39;)，杨再飞直接持股177.95万元(5.57%，标注&#39;法定代表人&#39;)；北京淘淘分享商务咨询合伙企业（员工持股平台）394.95万元(12.35%)，北京淘淘成长商务咨询合伙企业（员工持股平台）308.29万元(9.64%)。直接持股+ESOP合计=6.74%+5.57%+12.35%+9.64%=34.30%。法律尽调报告P12明确记载：&#39;创始股东于2021年3月2日签署了《一致行动协议》，约定两人为一致行动人士，共同控制目标集团&#39;，&#39;通过外部转让代GDP控制目标公司30.46%的投票权，包括合计控制目标公司34.30%的投票权，并有权委派目标公司7席董事中的4席&#39;。两处证据(财务尽调的股权比例加总与法律尽调的认定结论)完全吻合，且法律尽调明确确认任旭阳、杨再飞签署了一致行动协议、共同控制目标集团。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P6-7">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P6-7</span>
+</div><div class="src-anchor" title="海致科技法律尽调报告.pdf · P12">
+  <span class="src-doc">海致科技法律尽调报告.pdf · P12</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#11</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2022年之前Top10存货余额对应订单的履约成本累计998万元，已收回现金超1300万元，部分项目因客户预算调整存在无法执行风险</p>
+      <div class="src-chips"><span class="src-chip" title="2022年之前的Top10存货余额对应的订单…履约成本累计998万，已收回现金超1300万">海致科技投决报告.pdf · P48</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">在海致科技财务尽调报告P64的&quot;存货-已签约(4/4)&quot;中，找到了与验证项高度相关的表格：项目组抽取了10个合同签约时间2年以上且至今仍未验收的样本进行核查，统计结果显示：前10大合同履约成本余额合计998.87万元（≈998万元），前10大账面已回款金额合计1,320.13万元（≈超1300万元）。表中10个项目的合同签约时间从2020-09-18到2022-10-07（均在2022年10月之前，与&#39;2022年之前&#39;基本对应）。报告说明&#39;截至2024年10月31日，仍存在部分合同签约时间较长，但仍未验收的项目。合同签约时间为2022年10月之前的合同履约成本余额占正常执行项目的合同履约成本的比重为20.95%&#39;。
+关于风险原因，财务尽调报告P64明确说明项目长期未验收的主要原因为：&#39;目标公司的主要客户为政府相关部门，其验收流程相对严格，导致项目周期变长，验收进程缓慢&#39;。即风险归因是政府客户验收流程严格，而非&#39;客户预算调整&#39;。法律尽调报告P62-67的合同信息中未涉及&#39;客户预算调整导致无法执行&#39;的明确提示。存货分析P59-60中&#39;未签约&#39;项目提及&#39;项目预期执行难度较高，预计可收回金额低于已发生的合同履约成本，存在减值风险&#39;，但该部分针对的是未签约的存货（占比18.18%），并非Top10 2022年之前的已签约项目。
+期间映射核对：
+- 验证项主张：2022年之前Top10存货，履约成本998万，回款超1300万
+- 财务尽调P64证据：合同签约时间2年以上（实际均为2022年10月之前）Top10样本，履约成本余额998.87万，回款1,320.13万
+- 指标-期间-数值-单位-来源页均一致，核心数字（998万、1300万）完全匹配</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P64">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P64</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P59">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P59</span>
+</div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P60">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P60</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-indigo"><span class="chip-dot"></span>团队治理</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#12</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">任旭阳为海致科技创始人&amp;董事长，2001年加入百度，任百度公司副总裁；2009年牵头创办爱奇艺，2013年创办海致。</p>
+      <div class="src-chips"><span class="src-chip" title="任旭阳 创始人&amp;董事长 2001年加入百度">海致科技投决报告.pdf · P25</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调报告第11页核心团队介绍中关于任旭阳的履历原文如下：&#39;创始人 &amp; 董事长，男，汉族，1974年生，毕业于美国斯坦福大学，获管理学硕士学位创业者、投资人。2002年1月加入百度，是百度的创始团队成员，曾任百度公司商务拓展副总裁，负责公司市场、公关、战略合作、企业并购、政府关系和国际拓展方面工作。2009年曾牵头创办爱奇艺。2011年底创立一点资讯。2013年创立海致。&#39;
+逐项对比投决报告与尽调报告：
+1) 身份定位：投决报告称&#39;创始人&amp;董事长&#39;，尽调报告称&#39;创始人 &amp; 董事长&#39;，一致。
+2) 加入百度时间：投决报告称&#39;2001年&#39;，尽调报告明确为&#39;2002年1月&#39;，存在1年的事实性差异。
+3) 百度职位：投决报告称&#39;百度公司副总裁&#39;，尽调报告称&#39;百度公司商务拓展副总裁&#39;，投决报告遗漏了具体分管条线（商务拓展）。
+4) 2009年牵头创办爱奇艺：两处一致。
+5) 2013年创立海致：两处一致。
+6) 2011年底创立一点资讯：投决报告未提及，尽调报告有载，但两处并非矛盾，属信息详略差异。</p>
+      <details class="src-list"><summary>证据来源 · 1</summary><div><div class="src-anchor" title="海致科技财务尽调报告.pdf · P11">
+  <span class="src-doc">海致科技财务尽调报告.pdf · P11</span>
+</div></div></details>
+    </section>
+  </div>
+</article></div>
+</details></div>
+</details></div>
+</main>
+
+
+  </div>
+</body>
+</html>

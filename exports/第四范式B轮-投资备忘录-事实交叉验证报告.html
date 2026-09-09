@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>第四范式 B 轮投资备忘录---交叉验证报告</title>
+  <style>
+:root {
+  --bg: #f7f8fa;
+  --card: #ffffff;
+  --border: #e5e6e8;
+  --border-soft: #f2f3f5;
+  --text: rgba(0, 0, 0, 0.88);
+  --text-muted: #4e5969;
+  --text-soft: #5f6b7a;
+  --text-inverse: #ffffff;
+  --action-primary: #1d2129;
+  --accent: #0066ff;
+  --accent-soft: #e8f3ff;
+  --success: #008a23;
+  --success-soft: rgb(0 138 35 / 10%);
+  --warning: #ad4f00;
+  --warning-soft: rgb(173 79 0 / 12%);
+  --danger: #d92d20;
+  --danger-soft: rgb(217 45 32 / 10%);
+  --radius: 8px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.container { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* ============ 报告头 ============ */
+.report-header {
+  padding: 28px 32px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.report-eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-soft);
+}
+.report-header h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text);
+  line-height: 1.3;
+}
+.report-company {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.verdict-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 640px) {
+  .verdict-grid { grid-template-columns: 1fr; }
+}
+.verdict-card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.verdict-label {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: var(--text-soft);
+}
+.verdict-value {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+.verdict-danger { background: var(--danger-soft); }
+.verdict-danger .verdict-value { color: var(--danger); }
+.verdict-warning { background: var(--warning-soft); }
+.verdict-warning .verdict-value { color: var(--warning); }
+.verdict-positive .verdict-value { color: var(--success); }
+.risk-R1 { color: var(--success); }
+.risk-R2 { color: var(--accent); }
+.risk-R3 { color: var(--warning); }
+.risk-R4, .risk-R5 { color: var(--danger); }
+.report-summary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+/* ============ 顶部 KPI 网格 ============ */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 18px 0 24px;
+}
+.metric-card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.metric-label { margin: 0 0 4px; font-size: 11px; color: var(--text-soft); }
+.metric-value {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--text);
+}
+.metric-sub { margin: 6px 0 0; font-size: 11px; color: var(--text-soft); }
+
+/* ============ 主体（章节，下载版不含目录） ============ */
+.report-main { display: block; }
+
+/* ============ 章节 ============ */
+.sections-wrap { display: flex; flex-direction: column; gap: 12px; }
+.section {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.section > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section > summary::-webkit-details-marker { display: none; }
+.section > summary::after {
+  content: "▾";
+  font-size: 12px;
+  color: var(--text-soft);
+  transition: transform 0.15s ease;
+}
+.section[open] > summary::after { transform: rotate(180deg); }
+.section-body { padding: 4px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ============ 通用文本 ============ */
+.paragraph { margin: 0; font-size: 14px; line-height: 1.7; color: var(--text); }
+.bullets { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.7; color: var(--text); }
+.bullets.dotted { list-style-type: disc; }
+.bullets li + li { margin-top: 4px; }
+mark.hl {
+  background: var(--warning-soft);
+  color: var(--warning);
+  padding: 0 2px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+sup.cite a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 15px;
+  padding: 0 4px;
+  margin: 0 2px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+sup.cite a:hover { background: var(--text); color: var(--text-inverse); border-color: var(--text); }
+
+/* ============ 标注（callout） ============ */
+.callout { border: 1px solid; border-radius: var(--radius); padding: 12px 14px; }
+.callout-title { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.callout-body { margin: 0; font-size: 14px; line-height: 1.7; color: var(--text); }
+.tone-danger { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 24%, transparent); }
+.tone-danger .text-danger { color: var(--danger); }
+.tone-warning { background: var(--warning-soft); border-color: color-mix(in srgb, var(--warning) 24%, transparent); }
+.tone-warning .text-warning { color: var(--warning); }
+.tone-neutral { background: var(--bg); border-color: var(--border); }
+.tone-neutral .text-neutral { color: var(--text-muted); }
+.tone-positive { background: var(--success-soft); border-color: color-mix(in srgb, var(--success) 24%, transparent); }
+.tone-positive .text-positive { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-positive { color: var(--success); }
+.text-neutral { color: var(--text-muted); }
+
+/* ============ KPI 子卡 + 横向条形 ============ */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.stat-card { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); padding: 12px 14px; }
+.stat-label { margin: 0 0 4px; font-size: 11px; color: var(--text-soft); }
+.stat-value { margin: 0; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
+.stat-sub { margin: 6px 0 0; font-size: 11px; color: var(--text-soft); }
+
+.bars-block { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); padding: 14px 16px; }
+.bars-caption { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--text-soft); }
+.bars-list { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: flex; flex-direction: column; gap: 4px; }
+.bar-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.bar-label { font-size: 14px; color: var(--text-muted); }
+.bar-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bar-track { height: 8px; background: var(--border-soft); border-radius: 999px; overflow: hidden; }
+.bar-fill { width: 100%; height: 100%; border-radius: 999px; transform-origin: left center; }
+.bar-fill-positive { background: var(--success); }
+.bar-fill-warning { background: var(--warning); }
+.bar-fill-danger { background: var(--danger); }
+.bar-fill-neutral { background: var(--text-soft); }
+
+/* ============ 表格 ============ */
+/* Keep overflow inside the report surface on narrow screens instead of widening the page. */
+.table-wrap {
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table-wrap thead tr { background: var(--bg); }
+.table-wrap th { min-width: 8rem; text-align: left; padding: 10px 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.table-wrap td { min-width: 8rem; padding: 10px 12px; vertical-align: top; color: var(--text); border-bottom: 1px solid var(--border-soft); overflow-wrap: anywhere; }
+.table-wrap td.emphasize { font-weight: 600; color: var(--text); }
+.table-wrap tbody tr:last-child td { border-bottom: none; }
+@media (max-width: 640px) {
+  .table-wrap table { min-width: 640px; }
+}
+
+/* ============ 验证卡片 ============ */
+.vcards { display: flex; flex-direction: column; gap: 10px; }
+.vcards-group { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); overflow: hidden; }
+.vcards-group > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--bg);
+  user-select: none;
+}
+.vcards-group > summary::-webkit-details-marker { display: none; }
+.vcards-group > summary::after { content: " ▾"; color: var(--text-soft); font-size: 10px; }
+.vcards-group[open] > summary::after { content: " ▴"; }
+.vcards-group > div { padding: 10px 12px; }
+
+.vcard { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.vcard-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--card);
+}
+.vcard-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 999px;
+}
+.chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+.cat-blue, .cat-violet, .cat-cyan, .cat-orange, .cat-emerald, .cat-pink, .cat-indigo, .cat-slate {
+  border-color: var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.chip-risk-R1 { border-color: color-mix(in srgb, var(--success) 24%, transparent); background: var(--success-soft); color: var(--success); }
+.chip-risk-R2 { border-color: color-mix(in srgb, var(--accent) 24%, transparent); background: var(--accent-soft); color: var(--accent); }
+.chip-risk-R3 { border-color: color-mix(in srgb, var(--warning) 24%, transparent); background: var(--warning-soft); color: var(--warning); }
+.chip-risk-R4, .chip-risk-R5 { border-color: color-mix(in srgb, var(--danger) 24%, transparent); background: var(--danger-soft); color: var(--danger); }
+
+.verdict-ok { border-color: color-mix(in srgb, var(--success) 24%, transparent); background: var(--success-soft); color: var(--success); font-weight: 600; }
+.verdict-partial { border-color: color-mix(in srgb, var(--warning) 24%, transparent); background: var(--warning-soft); color: var(--warning); font-weight: 600; }
+.verdict-bad { border-color: color-mix(in srgb, var(--danger) 24%, transparent); background: var(--danger-soft); color: var(--danger); font-weight: 600; }
+.verdict-insufficient { border-color: var(--border); background: var(--bg); color: var(--text-muted); font-weight: 600; }
+
+.vcard-body { display: grid; grid-template-columns: 1.05fr 1fr; }
+@media (max-width: 720px) { .vcard-body { grid-template-columns: 1fr; } }
+.vcard-claim { position: relative; padding: 14px 16px 14px 20px; background: var(--card); border-right: 1px solid var(--border-soft); }
+@media (max-width: 720px) { .vcard-claim { border-right: 0; border-bottom: 1px solid var(--border-soft); } }
+.vcard-claim::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.vcard-evidence { padding: 14px 16px; background: var(--bg); }
+.vcard-deviation { padding: 12px 16px; border-top: 1px solid var(--border-soft); background: var(--warning-soft); display: flex; flex-direction: column; gap: 6px; }
+.vcard-eyebrow {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vcard-index { background: var(--action-primary); color: var(--text-inverse); padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+.vcard-text { margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.7; }
+.claim-text { color: var(--text); font-weight: 500; }
+.evidence-text { color: var(--text-muted); font-size: 14px; }
+.src-chips { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+.src-chip { display: inline-block; padding: 2px 8px; font-size: 10.5px; color: var(--text-muted); background: var(--card); border: 1px solid var(--border); border-radius: 6px; }
+.src-list { margin-top: 12px; }
+.src-list > summary { cursor: pointer; list-style: none; text-align: right; font-size: 14px; font-weight: 500; color: var(--accent); user-select: none; }
+.src-list > summary::-webkit-details-marker { display: none; }
+.src-list > summary::after { content: " ›"; }
+.src-list[open] > summary::after { content: " ▾"; }
+.src-list > div { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.src-anchor { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); padding: 6px 10px; }
+.src-doc { font-size: 14px; color: var(--text-muted); }
+
+/* ============ 引用底部清单 ============ */
+.citations { margin-top: 32px; padding: 22px 26px; border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+.citations h2 { margin: 0 0 14px; font-size: 14px; font-weight: 600; color: var(--text); }
+.citations-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.citation { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border-soft); }
+.citation:first-child { border-top: 0; padding-top: 0; }
+.cite-index { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; font-size: 10.5px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.cite-body { flex: 1; min-width: 0; }
+.cite-doc { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: var(--text); }
+.cite-excerpt { margin: 0; font-size: 14px; line-height: 1.7; color: var(--text-muted); }
+
+/* ============ 打印优化 ============ */
+@media print {
+  body { background: var(--card); }
+  .container { padding: 0; max-width: none; }
+  .section, .vcard, .vcards-group, .metric-card, .stat-card, .bars-block, .table-wrap, .verdict-card, .report-header, .citations {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+  .section[open] > summary::after, .section > summary::after { display: none; }
+  details, details[open] { display: block; }
+  details > summary { pointer-events: none; }
+  .vcards-group, .src-list { border: none; }
+  .vcards-group > div, .src-list > div { padding: 0; margin-top: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header class="report-header">
+  <p class="report-eyebrow">尽调复核报告</p>
+  <h1>第四范式 B 轮投资备忘录---交叉验证报告</h1>
+  <p class="report-company">第四范式（4Paradigm）</p>
+  <div class="verdict-grid">
+    <div class="verdict-card verdict-positive">
+      <p class="verdict-label">最终建议</p>
+      <p class="verdict-value">建议补充核验后再决</p>
+    </div>
+    <div class="verdict-card">
+      <p class="verdict-label">估值判断</p>
+      <p class="verdict-value">估值待印证</p>
+    </div>
+  </div>
+  <p class="report-summary">本次交叉验证以《第四范式财务尽调报告》和《第四范式法律尽调报告》为核心证据库，围绕《第四范式 B 轮投资备忘录》提出的 <mark class="hl">15 项关键主张</mark> 进行了系统核验。整体来看，在已加载的尽调材料中 <mark class="hl">未发现可直接归为 R4 否决风险的硬性事实矛盾</mark>，同时亦未识别出归为 R3 重大风险的验证项。本轮最高等级风险为 <mark class="hl">R2 一般风险 11 项</mark>——集中分布于 B 轮交易条款、关键业务效果数据、核心团队履历与行业宏观数据四大类，均呈现「当前材料未见充分证据」的状态，需在投决前补充独立来源核验<sup class="cite"><a href="#cite-1">1</a></sup><sup class="cite"><a href="#cite-2">2</a></sup><sup class="cite"><a href="#cite-3">3</a></sup><sup class="cite"><a href="#cite-4">4</a></sup><sup class="cite"><a href="#cite-5">5</a></sup><sup class="cite"><a href="#cite-6">6</a></sup>。此外 <mark class="hl">1 项招行信用卡中心交易分期数据挖掘模型</mark> 的合同起始日存在 2 天轻微差异，需澄清。</p>
+</header>
+
+<section class="metrics-grid"><div class="metric-card">
+  <p class="metric-label">已执行验证项</p>
+  <p class="metric-value text-neutral">15</p>
+  <p class="metric-sub">本轮全部完成</p>
+</div><div class="metric-card">
+  <p class="metric-label">不一致</p>
+  <p class="metric-value text-positive">0</p>
+  <p class="metric-sub">无相互冲突主张</p>
+</div><div class="metric-card">
+  <p class="metric-label">部分一致</p>
+  <p class="metric-value text-warning">2</p>
+  <p class="metric-sub">口径 / 日期轻微差异</p>
+</div><div class="metric-card">
+  <p class="metric-label">证据不足</p>
+  <p class="metric-value text-neutral">10</p>
+  <p class="metric-sub">需补外部佐证</p>
+</div><div class="metric-card">
+  <p class="metric-label">一致</p>
+  <p class="metric-value text-positive">3</p>
+  <p class="metric-sub">财务底盘扎实</p>
+</div><div class="metric-card">
+  <p class="metric-label">R2 一般风险</p>
+  <p class="metric-value text-warning">11</p>
+  <p class="metric-sub">需重点补证</p>
+</div></section>
+
+<main class="report-main">
+  <div class="sections-wrap"><details id="overview" class="section" open>
+  <summary class="section-head"><span>1. 验证概览与风险分布</span></summary>
+  <div class="section-body"><p class="paragraph">本次交叉验证以《第四范式财务尽调报告》《第四范式法律尽调报告》为核心证据库，围绕《第四范式 B 轮投资备忘录》提出的 <mark class="hl">15 项关键主张</mark> 做多源交叉印证。已加载的尽调材料中 <mark class="hl">未发现可直接归为 R4 否决风险的硬性事实矛盾</mark>，亦未识别出 R3 重大风险；本轮最高等级风险为 <mark class="hl">R2 一般风险 11 项</mark>，集中分布于 B 轮交易条款 / 关键业务效果数据 / 核心团队履历 / 行业宏观数据四大类<sup class="cite"><a href="#cite-1">1</a></sup><sup class="cite"><a href="#cite-2">2</a></sup><sup class="cite"><a href="#cite-3">3</a></sup><sup class="cite"><a href="#cite-5">5</a></sup><sup class="cite"><a href="#cite-6">6</a></sup>。</p>
+<div class="bars-block">
+  <p class="bars-caption">结论分布（共 15 项）</p>
+  <div class="bars-list"><div class="bar-row">
+  <div class="bar-meta">
+    <span class="bar-label">一致</span>
+    <span class="bar-value text-positive">3 项 · 20%</span>
+  </div>
+  <div class="bar-track" role="progressbar" aria-label="一致" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20" aria-valuetext="3 项 · 20%"><div class="bar-fill bar-fill-positive" style="transform:scaleX(0.2)"></div></div>
+</div><div class="bar-row">
+  <div class="bar-meta">
+    <span class="bar-label">部分一致</span>
+    <span class="bar-value text-warning">2 项 · 13%</span>
+  </div>
+  <div class="bar-track" role="progressbar" aria-label="部分一致" aria-valuemin="0" aria-valuemax="100" aria-valuenow="13" aria-valuetext="2 项 · 13%"><div class="bar-fill bar-fill-warning" style="transform:scaleX(0.13)"></div></div>
+</div><div class="bar-row">
+  <div class="bar-meta">
+    <span class="bar-label">证据不足</span>
+    <span class="bar-value text-neutral">10 项 · 67%</span>
+  </div>
+  <div class="bar-track" role="progressbar" aria-label="证据不足" aria-valuemin="0" aria-valuemax="100" aria-valuenow="67" aria-valuetext="10 项 · 67%"><div class="bar-fill bar-fill-neutral" style="transform:scaleX(0.67)"></div></div>
+</div><div class="bar-row">
+  <div class="bar-meta">
+    <span class="bar-label">不一致</span>
+    <span class="bar-value text-danger">0 项 · 0%</span>
+  </div>
+  <div class="bar-track" role="progressbar" aria-label="不一致" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0 项 · 0%"><div class="bar-fill bar-fill-danger" style="transform:scaleX(0.02)"></div></div>
+</div></div>
+</div>
+<div class="bars-block">
+  <p class="bars-caption">风险等级分布（共 15 项）</p>
+  <div class="bars-list"><div class="bar-row">
+  <div class="bar-meta">
+    <span class="bar-label">R4 否决风险</span>
+    <span class="bar-value text-danger">0 项</span>
+  </div>
+  <div class="bar-track" role="progressbar" aria-label="R4 否决风险" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0 项"><div class="bar-fill bar-fill-danger" style="transform:scaleX(0.02)"></div></div>
+</div><div class="bar-row">
+  <div class="bar-meta">
+    <span class="bar-label">R3 重大风险</span>
+    <span class="bar-value text-danger">0 项</span>
+  </div>
+  <div class="bar-track" role="progressbar" aria-label="R3 重大风险" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0 项"><div class="bar-fill bar-fill-danger" style="transform:scaleX(0.02)"></div></div>
+</div><div class="bar-row">
+  <div class="bar-meta">
+    <span class="bar-label">R2 一般风险</span>
+    <span class="bar-value text-warning">11 项 · 73%</span>
+  </div>
+  <div class="bar-track" role="progressbar" aria-label="R2 一般风险" aria-valuemin="0" aria-valuemax="100" aria-valuenow="73" aria-valuetext="11 项 · 73%"><div class="bar-fill bar-fill-warning" style="transform:scaleX(0.73)"></div></div>
+</div><div class="bar-row">
+  <div class="bar-meta">
+    <span class="bar-label">R1 低风险</span>
+    <span class="bar-value text-positive">4 项 · 27%</span>
+  </div>
+  <div class="bar-track" role="progressbar" aria-label="R1 低风险" aria-valuemin="0" aria-valuemax="100" aria-valuenow="27" aria-valuetext="4 项 · 27%"><div class="bar-fill bar-fill-positive" style="transform:scaleX(0.27)"></div></div>
+</div></div>
+</div></div>
+</details>
+<details id="top-risks" class="section" open>
+  <summary class="section-head"><span>2. 关键风险项 TOP 7</span></summary>
+  <div class="section-body"><p class="paragraph">未识别 R4 否决性风险，亦未识别 R3 重大风险。以下为按金融影响 / 核验缺口严重度排序的 TOP 7 重点复核项，建议在投决前补充独立来源核验。</p>
+<ol class="bullets ordered"><li><mark class="hl">B 轮融资核心交易条款全部证据不足（R2 · 证据不足）</mark>：投前估值 4 亿美元 / 投后 4.35 亿美元、总投资 38,340,582 美元、老股转让 3,340,582 美元、Series B Capital Raised 35,000,000 美元及逐方认购金额、汇率 6.5622 及领投方为元生资本等本轮交易核心参数，当前财务尽调（融资汇总仅覆盖至 A-2 轮）和法律尽调（仅含 B 轮投资人优先权利对比）均未涵盖，需补充 B 轮 Term Sheet / SPA / 股东协议印证<sup class="cite"><a href="#cite-1">1</a></sup>。</li><li><mark class="hl">招行信用卡中心业务效果百分比数据证据不足（R2 · 证据不足）</mark>：交易分期手续费收入提升 61%、短信营销响应率提升 68%、汽车分期精准营销响应率提升 200-300% 三项业务成效数据，财务尽调 P32-34 销售合同审阅清单仅能确认 2015-2017 年相关项目合同存在，未提供任何业务效果百分比数据，亦未见 AB Test 报告 / 客户验收材料，建议补充<sup class="cite"><a href="#cite-2">2</a></sup>。</li><li><mark class="hl">核心团队成员个人履历背景证据不足（R2 · 证据不足）</mark>：戴文渊「百度凤巢唯一总架构师 / T10 / 变现能力 4 年 8 倍 / 华为诺亚方舟主任科学家」、张宇「IBM 1.7 亿美元最大单笔订单 / 5 年累计 8000 万美元 / 思科连续 5 财年双位数增长」等任职经历及业绩主张，当前材料均未见充分证据，需第三方背景调查 / 高管简历 / 人事尽调印证<sup class="cite"><a href="#cite-3">3</a></sup>。</li><li><mark class="hl">联合创始人吴茗相关法律安排证据不足（R2 · 证据不足）</mark>：夫妻关系认定、一致行动协议、未来两年淡出三项子主张，当前法律尽调与财务尽调均未提供明确支持或否认。特别需注意：法律尽调 P7-10 的「控制协议」系 VIE 架构下的协议控制文件（独家业务合作 / 股权质押 / 独家购买权 / 授权委托书），与「一致行动协议」在法律性质上不同，<mark class="hl">不应混淆</mark><sup class="cite"><a href="#cite-4">4</a></sup>。</li><li><mark class="hl">平台产品发布时间及定位部分一致（R2 · 部分一致）</mark>：客户以银行为主的定位有支持；但「2015 年 8 月推出第二/新一代平台」的具体时点存疑——尽调材料中 2015 年 8 月仅与 A 轮增资协议签署及变更为中外合资企业相关；财务尽调未明确「先知」平台发布时间，亦未出现「第二/新一代」产品代际概念<sup class="cite"><a href="#cite-5">5</a></sup>。</li><li><mark class="hl">行业宏观与对标公司数据证据不足（R2 · 证据不足）</mark>：2014 年银行业机构构成、银行业 IT 400 亿元、SAS 全球 30 亿美元（26% 来自银行）等市场类比数据均属外部宏观/对标公司数据，尽调材料中未见任何相关引用，需补充银监会 / CBIRC 年报、IDC / Gartner 行业报告、SAS 年报等独立公开来源<sup class="cite"><a href="#cite-6">6</a></sup>。</li><li><mark class="hl">招行信用卡交易分期合同起始日 2 天轻微差异（R1 · 部分一致）</mark>：财务尽调 P34 记载起始日为 2015-08-06，与备忘录的 2015-08-08 存在 2 天差异；合同金额 500,000 元、签约主体、项目名称均一致；毛利率 142,756 / 485,437 ≈ 29.4% 经内部自洽校验通过。建议在投决前澄清日期口径<sup class="cite"><a href="#cite-7">7</a></sup><sup class="cite"><a href="#cite-8">8</a></sup>。</li></ol></div>
+</details>
+<details id="r2-partial" class="section" open>
+  <summary class="section-head"><span>3. R2 一般风险 · 部分一致（1 项）</span></summary>
+  <div class="section-body"><div class="vcards"><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#1</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">公司第二/新一代平台产品在 2015 年 8 月份推出，主要面向银行为主的大型金融机构，目标是帮助每个业务人员都能成为数据科学家，大幅度降低数据建模门槛。</p>
+      <div class="src-chips"><span class="src-chip" title="公司第二/新一代平台产品于 2015 年 8 月推出，主要面向银行为主的大型金融机构。">第四范式 B 轮投资备忘录 · P5</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">对三项子主张的核验结果如下：
+1. **客户以银行为主**：有支持。财务尽调 P12 明确「目标集团客户以大型商业银行为主」；P10 列举招行信用卡中心、招行深圳分行、光大信用卡、中信信用卡等客户，与主张一致。
+2. **2015 年 8 月推出「第二/新一代」平台**：证据不足。法律尽调 P17 显示 2015-08-03 签署《A 轮增资协议》并完成中外合资变更；财务尽调未明确「先知」平台的发布时间，亦未出现「第二/新一代」产品代际表述。
+3. **「帮助业务人员成为数据科学家」**：部分间接支持。财务尽调 P10 提及平台技术服务包含「提供培训（如何建模）」，法律尽调 P7 提及「搭建建模平台 + 数据分析技术服务」，但均未出现「帮助每个业务人员成为数据科学家」的具体表述。</p>
+      <details class="src-list"><summary>证据来源 · 6</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P12 · 客户结构 · 大型商业银行</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P10 · 业务模式 · 客户列表</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P9 · 平台技术服务范围</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P17 · A 轮增资协议签署</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P20 · 第四范式（北京）成立时间</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P7 · 技术服务范围</span>
+</div></div></details>
+    </section>
+  </div>
+</article></div></div>
+</details>
+<details id="r2-insufficient" class="section" open>
+  <summary class="section-head"><span>4. R2 一般风险 · 证据不足（10 项）</span></summary>
+  <div class="section-body"><div class="vcards"><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-violet"><span class="chip-dot"></span>融资数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#2</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">B 轮 Series B Capital Raised 合计 35,000,000 美元；其中元生资本 18,000,000、众为资本 6,000,000、光控众盈 2,000,000、红杉资本 6,168,961.43、创新工场美元三期 951,500.95、创新工场人民币二期 1,520,120.03、领沨资本 359,417.59 美元。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P3</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P6-7 历史融资及股权变更汇总仅披露至 A-2 轮：A 轮 SCC USD 3M、A-1 轮 SCC+Sinovation 各 USD 2.1M、A-2 轮 创新工场 + 红杉 + 上海峰上 合计 RMB 8,612 万元；表中未出现 B 轮各投资方明细。法律尽调 P30-36 附件一虽含 B 轮 Term Sheet 优先权对比，但未列各投资方认购金额。结论：当前材料无法支持或反驳，需要 B 轮 SPA、股东协议等原始交易文件。</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P6-7 · 历史融资及股权变更汇总（截至 2017-06-30）</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P30-36 · 附件一 · 投资人优先权利对比</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P18 · 股权变更历程 · 截至 A-2 轮</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-violet"><span class="chip-dot"></span>融资数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#3</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">创新工场美元三期基金和人民币二期基金本轮均为 Pro rata；按汇率 6.5622，人民币二期基金 1,520,120 美元等额人民币 9,975,332 元；本轮领投方为元生资本。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P3</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">已检索财务尽调 P3 / P13、法律尽调 P4 / P37：均仅涉及 A 轮及之前的术语定义、记账错误、投资人列表、商标信息，未覆盖 B 轮 Pro rata 参与、汇率 6.5622、领投方为元生资本等核心信息。文件库内现有尽调材料无法核验该主张。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P3 · 专业术语及简称汇总</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P13 · 尽职调查发现概要</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P4 · 第一部分 · 定义（A-1/A-2 投资人）</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P37 · 知识产权 · 商标注册</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-violet"><span class="chip-dot"></span>融资数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#4</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">第四范式 B 轮融资投前估值 4 亿美元，投后估值 4.35 亿美元；各方总投资金额为 38,340,582 美元，其中 3,340,582 美元用于从联合创始人吴茗和 ESOP 购买老股，其余用于认购新增注册资本。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P3</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P17/P19（调整后合并资产负债表 + 货币资金/短期投资附注）与法律尽调 P28/P37（商标与租赁清单）均未涉及 B 轮估值与老股转让。内部数学自洽性可作辅助：投后 - 投前 = 3,500 万美元 ≈ 总投 - 老股 = 38,340,582 - 3,340,582 = 35,000,000 美元。仍需调取 B 轮 Term Sheet / SPA 原始文件印证。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P17 · 调整后合并资产负债表</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P19 · 货币资金 / 短期投资附注</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P28 · 关键员工清单</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P37 · 知识产权附件</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-emerald"><span class="chip-dot"></span>业务数据</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#5</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">第四范式机器学习模型在招商银行信用卡中心将交易分期手续费收入提升 61%，短信营销响应率提升 68%，汽车分期贷款精准营销场景营销响应率提升 200-300%。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P5</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P26 应收账款明细 / P33-34 销售合同审阅清单仅能确认招商银行信用卡中心三个项目合同存在（交易分期 50 万、机器学习建模平台 180 万、客户信息先知 135 万），但未提供任何业务成效百分比数据，亦无 A/B Test 报告或客户验收材料。法律尽调 P28/P37 仅含商标与知识产权信息，与业务效果无关。建议补充 AB Test 报告 / 客户验收材料。</p>
+      <details class="src-list"><summary>证据来源 · 6</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P26 · 应收账款明细 · 招行项目</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P33 · 销售合同审阅清单 · 招行</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P34 · 销售合同审阅清单 · 招行</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P12-15 · 业务模式分析</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P28 · 知识产权</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P37 · 知识产权</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-cyan"><span class="chip-dot"></span>法务合规</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#6</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">吴茗与戴文渊是夫妻关系，两人已签订一致行动协议，吴茗也计划未来两年从公司淡出。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P4</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">1. **夫妻关系**：法律尽调 P4 仅将戴文渊、吴茗共同定义为「创始股东」；P6 股权结构仅列各自持股比例（37.319% / 35.048%）；P15 工商信息仅列其分别为法定代表人/总经理 / 董事；P28-29 关键员工清单仅列其分别为「首席执行官」/「联合创始人」。均未说明两人为夫妻/配偶。
+2. **一致行动协议**：法律尽调 P7-10 提及戴/吴与公司及第四范式（北京）签署的「控制协议」（独家业务合作 / 股权质押 / 独家购买权 / 授权委托书），是 VIE 架构下的协议控制文件，与创始人之间针对股东会/董事会表决的「一致行动协议」在法律性质上不同，不应混淆。
+3. **未来两年淡出**：法律尽调 P28-29 仍将吴茗列为「联合创始人」，P15 列其为公司董事；P29 仅提及吴茗代持 ESOP 对应 308 万元注册资本，计划转让至持股平台，未提及其本人淡出时间表。三项主张当前材料均证据不足。</p>
+      <details class="src-list"><summary>证据来源 · 13</summary><div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P4 · 第一部分 · 定义（创始股东）</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P6 · 股权结构表</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P7 · 控制协议 · 独家业务合作</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P8 · 控制协议 · 股权质押</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P9 · 控制协议 · 独家购买权</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P10 · 控制协议 · 授权委托书</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P11 · VIE 结构 · 协议控制</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P15 · 公司工商信息 · 董监高</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P28 · 关键员工清单</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P29 · 员工激励 · ESOP 代持</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P37 · 知识产权附件</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P6 · 股权结构与历史融资</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P7 · 股权结构与历史融资</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#7</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">2014 年中国银行业 IT 投入规模在 400 亿元左右。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P6</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P7、P19 与法律尽调 P16、P19 仅涉及目标公司历史融资、股权结构、资产负债表、公司沿革等内部信息，文件库内不包含任何银行业 IT 投入规模等行业宏观数据，无法支持或反驳该主张。建议补充 IDC / Gartner / 银监会等行业研报。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P7 · 历史融资及股权变更</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P19 · 合并资产负债表</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P16 · 公司历史沿革</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P19 · 股权结构 / 验资报告</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#8</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">SAS 作为类比对象，去年（备忘录撰写前）全球收入 30 亿美元，其中 26% 的收入来自银行。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P6</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P17/P20 与法律尽调 P20/P45 检索到的内容均为目标公司（第四范式）的资产负债表、货币资金、租赁合同与工商信息，文件库中没有任何关于 SAS 公司全球收入或行业收入结构的数据。建议补充 SAS 公开年报 / IR 资料。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P17 · 合并资产负债表</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P20 · 货币资金 / 短期投资附注</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P20 · 公司工商信息</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P45 · 租赁合同清单</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-pink"><span class="chip-dot"></span>市场行业</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#9</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">截至 2014 年底，我国银行业金融机构包括 5 家大型商业银行、12 家股份制商业银行、1 家邮政储蓄银行、133 家城市商业银行、665 家农村商业银行、89 家农村合作银行、1,596 家农村信用社。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P6</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P7、P27 仅涉及目标集团历史融资及经营费用分析；法律尽调 P17、P18 仅涉及历次增资和股权转让详情。文件库未包含银监会 / CBIRC 年报或行业统计数据等可用于交叉验证的来源，无法核验。建议补充银监会 / CBIRC 公开数据。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P7 · 历史融资及股权变更</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P27 · 经营费用分析</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P17 · 历次增资详情</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P18 · 股权转让详情</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-indigo"><span class="chip-dot"></span>团队治理</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#10</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">销售总监张宇在 IBM 期间曾带领 IBM 金融团队实现 IBM 在中国最大的单笔订单 1.7 亿美元，管理中国银行信用卡中心业务 5 年累计签署 8000 万美元销售合同；在思科期间连续 5 个财年保持超额完成销售业绩及 2 位数年度业绩增长。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P4</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P1（封面）/ P3（术语汇总）、法律尽调 P1（致函免责声明）/ P9（VIE 协议控制分析）均未涉及核心团队个人履历。张宇 IBM/思科销售业绩属个人履历背景，需要人事尽调报告、背景调查材料或简历等独立来源进行交叉验证。</p>
+      <details class="src-list"><summary>证据来源 · 4</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P1 · 封面</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P3 · 术语汇总</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P1 · 致函与免责声明</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P9 · VIE 结构与协议控制</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-indigo"><span class="chip-dot"></span>团队治理</span>
+      <span class="chip chip-risk chip-risk-R2">R2 中低风险</span>
+    </div>
+    <span class="chip verdict-insufficient">证据不足</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#11</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">创始人戴文渊 2009-2013 年就职于百度，是百度凤巢唯一的总架构师，技术级别 T10，是最年轻的百度高级科学家，把百度的变现能力 4 年提升了 8 倍；2013-2014 年就职于华为，诺亚方舟实验室主任科学家。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P4</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">法律尽调 P29 关键员工清单仅列示戴文渊职位为「首席执行官」，未披露百度凤巢、T10、华为诺亚方舟等任职细节；P6-7 仅涉及股权结构。财务尽调 P6-7 仅涉及股权结构（戴文渊持股 37.32%）与历史融资，未涉及创始人履历。两份尽调材料均未找到关于「百度凤巢总架构师」「T10」「变现能力 4 年 8 倍」「华为诺亚方舟主任科学家」等表述。建议补充第三方背景调查或公开履历印证。</p>
+      <details class="src-list"><summary>证据来源 · 5</summary><div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P29 · 关键员工清单 · 戴文渊</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P6 · 股权结构</span>
+</div><div class="src-anchor" title="见法律尽调报告对应章节。">
+  <span class="src-doc">第四范式 法律尽调报告 · P7 · 股权结构</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P6 · 股权结构</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P7 · 股权结构</span>
+</div></div></details>
+    </section>
+  </div>
+</article></div></div>
+</details>
+<details id="r1-partial" class="section" open>
+  <summary class="section-head"><span>5. R1 低风险 · 部分一致（1 项）</span></summary>
+  <div class="section-body"><div class="vcards"><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-partial">部分一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#12</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">招行信用卡中心交易分期数据挖掘模型合同起始日 2015 年 8 月 8 日，合同金额 500,000 元，审阅期间收入 485,437 元，审阅期间成本 (342,681) 元，毛利 142,756 元，毛利率 29%。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P5</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">1. **合同起始日**：财务尽调 P34 记载为 **2015 年 8 月 6 日**，与备忘录的 **2015 年 8 月 8 日** 存在 2 天差异。
+2. **合同金额**：500,000 元 一致 ✓
+3. **签约客户**：「招商银行股份有限公司信用卡中心」一致 ✓
+4. **签约项目**：交易分期数据挖掘模型 一致 ✓
+5. 财务尽调 P32-34 销售合同审阅清单仅列示合同层面的签约金额 / 起始日 / 付款批次，未含单合同收入/成本/毛利数据，无法直接核验。
+6. 内部一致性校验：142,756 ÷ 485,437 ≈ 29.4%，与备忘录标注的「29%」基本吻合（四舍五入）。
+建议：在投决前澄清合同起始日口径（2015-08-06 vs 2015-08-08），其余金额与口径无实质性差异。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P34 · 销售合同审阅清单 · 招行交易分期</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P32-33 · 销售合同审阅清单 · 招行</span>
+</div></div></details>
+    </section>
+  </div>
+</article></div></div>
+</details>
+<details id="r1-consistent" class="section" >
+  <summary class="section-head"><span>6. R1 低风险 · 一致（3 项）</span></summary>
+  <div class="section-body"><div class="vcards"><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#13</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">合并资产负债表 2015/12/31 货币资金 19,839,403 元、固定资产净值 454,098 元；2016/12/31 货币资金 29,846,106 元、短期投资 70,020,000 元、应收账款 450,000 元；2017/6/30 货币资金 30,035,011 元、短期投资 37,820,000 元、应收账款 3,271,928 元。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P7</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P17-20 合并资产负债表逐项核对：
+• 货币资金 2015/12 19,839,403 ✓ / 2016/12 29,846,106 ✓ / 2017H1 30,035,011 ✓
+• 短期投资 2016/12 70,020,000 ✓ / 2017H1 37,820,000 ✓
+• 应收账款 2016/12 450,000 ✓ / 2017H1 3,271,928 ✓（与 P26 应收账款账龄及回款分析表合计一致）
+• 固定资产净值 2015/12 454,098 ✓（由原值 476,417 减累计折旧 22,319 得出）
+所有期间 - 指标 - 数值完全一致，无任何差异。</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P17 · 合并资产负债表 2015/12</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P18 · 合并资产负债表 2016/12</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P26 · 应收账款账龄及回款分析</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-blue"><span class="chip-dot"></span>财务数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#14</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">合并利润表 2015 年主营业务收入 452,427 元、主营业务利润 450,798 元、管理费用 (6,655,014) 元；2016 年主营业务收入 4,281,028 元、主营业务成本 (1,011,350) 元、主营业务利润 3,197,331 元、营业费用 (7,375,050) 元、管理费用 (25,807,548) 元。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P6</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P21 合并利润表逐项核对，所有数字（主营业务收入、主营业务成本、主营业务利润、营业费用、管理费用）的指标名称、期间归属、金额与单位均完全一致。P23 经营数据分析中 2015 / 2016 营收与成本数据吻合；P27 经营费用分析中管理费用明细合计也与备忘录一致（2015 年管理 6,655,014 + 营业 411,168 = 7,066,182；2016 年管理 25,807,548 + 营业 7,375,050 = 33,182,598）。</p>
+      <details class="src-list"><summary>证据来源 · 3</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P21 · 合并利润表</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P23 · 经营数据分析</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P27 · 经营费用分析</span>
+</div></div></details>
+    </section>
+  </div>
+</article><article class="vcard">
+  <header class="vcard-head">
+    <div class="vcard-chips">
+      <span class="chip cat-orange"><span class="chip-dot"></span>客户数据</span>
+      <span class="chip chip-risk chip-risk-R1">R1 低风险</span>
+    </div>
+    <span class="chip verdict-ok">一致</span>
+  </header>
+  <div class="vcard-body">
+    <section class="vcard-claim">
+      <p class="vcard-eyebrow">
+        <span class="vcard-index">#15</span>
+        投资备忘录 · 主张
+      </p>
+      <p class="vcard-text claim-text">招行上海分行培训合同《数据分析道与术》合同起始日 2015 年 1 月 15 日，合同金额 16,000 元，审阅期间收入 15,534 元，毛利 15,534 元，毛利率 100%。</p>
+      <div class="src-chips"><span class="src-chip" title="见投资备忘录原文对应段落。">第四范式 B 轮投资备忘录 · P5</span></div>
+    </section>
+    <section class="vcard-evidence">
+      <p class="vcard-eyebrow">证据摘要</p>
+      <p class="vcard-text evidence-text">财务尽调 P24《已签约销售合同情况汇总》明确记录：「招行上海分行 - 培训合同《数据分析道与术》」起始日 2015-01-15、金额 16,000、审阅期间收入 15,534、成本 -、毛利 15,534、毛利率 100%。P34《销售合同审阅清单》对应「招商银行股份有限公司上海分行信息技术部」培训合同、起始日与签约金额均一致。两处证据与备忘录主张完全吻合。</p>
+      <details class="src-list"><summary>证据来源 · 2</summary><div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P24 · 已签约销售合同情况汇总</span>
+</div><div class="src-anchor" title="见财务尽调报告对应章节。">
+  <span class="src-doc">第四范式 财务尽调报告 · P34 · 销售合同审阅清单</span>
+</div></div></details>
+    </section>
+  </div>
+</article></div></div>
+</details>
+<details id="conclusion" class="section" open>
+  <summary class="section-head"><span>7. 复核结论与下一步建议</span></summary>
+  <div class="section-body"><div class="callout tone-warning">
+  <p class="callout-title text-warning">整体复核结论</p>
+  <p class="callout-body"><mark class="hl">建议补充核验后再决</mark> —— 未识别 R4 / R3 风险，财务数据底盘扎实；但本轮 <mark class="hl">11 项 R2 风险</mark> 高度集中于交易条款 / 业务效果 / 团队履历 / 行业宏观四类，且均呈「当前材料未见充分证据」状态，需在投决前补齐独立来源印证，避免投决核心论据缺乏可追溯依据。</p>
+</div>
+<ul class="bullets dotted"><li><mark class="hl">优先调取 B 轮原始交易文件</mark>：Term Sheet / SPA / 股东协议 / 各方认购份额表，逐项印证投前 4 亿美元 / 投后 4.35 亿美元、总投资 38.34M 美元、汇率 6.5622、领投方为元生资本等核心参数；</li><li><mark class="hl">补充业务效果客观证据</mark>：要求公司提供招行信用卡中心 61% / 68% / 200-300% 业务效果的 AB Test 报告、客户验收报告或运营数据，避免以营销口径替代财务事实；</li><li><mark class="hl">第三方背景调查</mark>：对戴文渊、张宇等核心团队成员的百度 / 华为 / IBM / 思科任职经历及业绩做独立背调，必要时通过持牌背调机构出具报告；</li><li><mark class="hl">法律层面澄清吴茗安排</mark>：要求出具夫妻关系证明 + 真正意义上的「创始人一致行动协议」（区别于 VIE 控制协议）+ 淡出时间表书面安排，并完成董事会成员变更登记；</li><li><mark class="hl">澄清招行交易分期合同起始日</mark>：以双方原合同盖章页为准统一为 2015-08-06 或 2015-08-08，避免在交割文件中出现日期歧义；</li><li><mark class="hl">补充行业宏观对标数据来源</mark>：银监会 2014 年银行业金融机构统计、IDC / Gartner 银行 IT 投入测算、SAS 公开年报，增强投决论据可信度。</li></ul></div>
+</details></div>
+</main>
+
+<section class="citations">
+  <h2>引用与原文摘要（共 11 条）</h2>
+  <ol class="citations-list"><li id="cite-1" class="citation">
+  <span class="cite-index">[1]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 B 轮投资备忘录 · P3 · B 轮交易条款</p>
+    <p class="cite-excerpt">「投前估值 4 亿美元 / 投后 4.35 亿美元，总投资 38,340,582 美元，其中 3,340,582 美元用于受让吴茗 + ESOP 老股；本轮领投方为元生资本，汇率 6.5622。」</p>
+  </div>
+</li><li id="cite-2" class="citation">
+  <span class="cite-index">[2]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 B 轮投资备忘录 · P5 · 招行信用卡中心业务效果</p>
+    <p class="cite-excerpt">「招行信用卡中心交易分期手续费收入提升 61%、短信营销响应率提升 68%、汽车分期贷款精准营销响应率提升 200-300%。」</p>
+  </div>
+</li><li id="cite-3" class="citation">
+  <span class="cite-index">[3]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 B 轮投资备忘录 · P4 · 创始团队履历</p>
+    <p class="cite-excerpt">「戴文渊 2009-2013 百度凤巢唯一总架构师 / T10 / 变现能力 4 年 8 倍；2013-2014 华为诺亚方舟实验室主任科学家。」</p>
+  </div>
+</li><li id="cite-4" class="citation">
+  <span class="cite-index">[4]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 B 轮投资备忘录 · P4 · 联合创始人吴茗</p>
+    <p class="cite-excerpt">「吴茗与戴文渊为夫妻关系，两人已签订一致行动协议，吴茗计划未来两年逐步从公司淡出。」</p>
+  </div>
+</li><li id="cite-5" class="citation">
+  <span class="cite-index">[5]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 B 轮投资备忘录 · P5 · 平台产品发布与定位</p>
+    <p class="cite-excerpt">「公司第二/新一代平台产品于 2015 年 8 月推出，主要面向银行为主的大型金融机构，帮助每个业务人员都能成为数据科学家。」</p>
+  </div>
+</li><li id="cite-6" class="citation">
+  <span class="cite-index">[6]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 B 轮投资备忘录 · P6 · 行业宏观数据</p>
+    <p class="cite-excerpt">「2014 年银行业金融机构 5 家国有大行 + 12 家股份行 + 1 家邮储 + 133 家城商行 + 665 家农商行；银行业 IT 投入约 400 亿元；SAS 全球收入 30 亿美元、其中 26% 来自银行。」</p>
+  </div>
+</li><li id="cite-7" class="citation">
+  <span class="cite-index">[7]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 B 轮投资备忘录 · P5 · 招行交易分期合同关键参数</p>
+    <p class="cite-excerpt">「招行信用卡中心 · 交易分期数据挖掘模型，合同起始日 2015-08-08，签约金额 500,000 元、毛利率 29%。」</p>
+  </div>
+</li><li id="cite-8" class="citation">
+  <span class="cite-index">[8]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 财务尽调报告 · P34 · 销售合同审阅清单 · 招行交易分期</p>
+    <p class="cite-excerpt">「招行交易分期数据挖掘模型 合同起始日 2015-08-06，合同金额 500,000.00 元（与备忘录存在 2 天差异）。」</p>
+  </div>
+</li><li id="cite-9" class="citation">
+  <span class="cite-index">[9]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 财务尽调报告 · P21 · 合并利润表（2015 / 2016）</p>
+    <p class="cite-excerpt">「2015 主营业务收入 452,427、主营业务利润 450,798、管理费用 (6,655,014)；2016 主营业务收入 4,281,028、主营业务成本 (1,011,350)、主营业务利润 3,197,331、营业费用 (7,375,050)、管理费用 (25,807,548)。」</p>
+  </div>
+</li><li id="cite-10" class="citation">
+  <span class="cite-index">[10]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 财务尽调报告 · P17-20 · 合并资产负债表（2015 / 2016 / 2017H1）</p>
+    <p class="cite-excerpt">「货币资金 19,839,403 / 29,846,106 / 30,035,011；短期投资 - / 70,020,000 / 37,820,000；应收账款 - / 450,000 / 3,271,928。」</p>
+  </div>
+</li><li id="cite-11" class="citation">
+  <span class="cite-index">[11]</span>
+  <div class="cite-body">
+    <p class="cite-doc">第四范式 财务尽调报告 · P24 · 招行上海分行培训合同</p>
+    <p class="cite-excerpt">「招商银行上海分行 · 培训合同《数据分析道与术》，合同起始日 2015-01-15，合同金额 16,000 元，毛利率 100%。」</p>
+  </div>
+</li></ol>
+</section>
+  </div>
+</body>
+</html>
