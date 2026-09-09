@@ -1,0 +1,68 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { createServer } from "vite";
+
+const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom" });
+try {
+  const { createComposerMinimizeTween, driveComposerMinimize } = await server.ssrLoadModule("/src/components/project/useComposerMinimize.ts");
+  const surface = { y: 0, scaleX: 1, scaleY: 1, opacity: 1 };
+  let hidden = false;
+  const animation = createComposerMinimizeTween(surface, () => { hidden = true; }, () => { hidden = false; });
+  try {
+    assert.equal(animation.paused(), true);
+    assert.equal(animation.duration(), 0.32);
+    assert.equal(driveComposerMinimize(animation, false), true);
+    assert.equal(driveComposerMinimize(animation, true), false);
+    assert.equal(animation.paused(), true, "Close then reopen before the next tick cancels the old direction");
+    assert.equal(animation.progress(), 0);
+    animation.progress(0.5);
+    assert.equal(surface.y, 0, "The composer shares the launcher's bottom anchor");
+    assert.ok(surface.scaleY < 1 && surface.scaleX < 1, "Minimize contracts into the centered launcher");
+    assert.equal(hidden, false, "Closing does not hide before completion");
+    const interruptedPosition = { ...surface };
+    animation.reverse();
+    for (const property of ["y", "scaleX", "scaleY", "opacity"]) assert.equal(surface[property], interruptedPosition[property], "Reversing never resets the visual position");
+    animation.pause().progress(0);
+    assert.equal(surface.scaleX, 1);
+    assert.equal(surface.opacity, 1);
+    assert.equal(hidden, false);
+    animation.progress(1);
+    assert.equal(hidden, true);
+    assert.equal(surface.opacity, 0);
+    assert.equal(surface.y, 0);
+    assert.equal(driveComposerMinimize(animation, true), true);
+    assert.equal(driveComposerMinimize(animation, false), false);
+    assert.equal(animation.paused(), true, "Open then close before the next tick settles fully closed");
+    assert.equal(animation.progress(), 1);
+    animation.progress(0);
+    assert.equal(hidden, false, "A completed minimization can restore the same surface");
+    animation.progress(0.4);
+    assert.equal(driveComposerMinimize(animation, true, true), false);
+    assert.equal(animation.progress(), 0, "Reduced motion restores immediately");
+    assert.equal(driveComposerMinimize(animation, false, true), false);
+    assert.equal(animation.progress(), 1, "Reduced motion minimizes immediately");
+    animation.progress(0.4).kill();
+    assert.equal(animation.parent, null, "Unmount cleanup removes the running animation");
+  } finally { animation.kill(); }
+
+  const read = (path) => readFile(new URL(`../src/${path}`, import.meta.url), "utf8");
+  const motion = await read("components/project/useComposerMinimize.ts");
+  const shell = await read("components/project/CommitteeWorkspace.tsx");
+  const review = await read("components/project/ReportReviewList.tsx");
+  const css = await read("components/project/manager-workspace.css");
+  assert.ok(motion.includes('"(prefers-reduced-motion: reduce)"') && motion.includes("driveComposerMinimize(animation, open, reducedMotion.current)"));
+  assert.ok(motion.includes("if (!animating) setPresent(open)"), "Endpoint reversals settle both animation and layout presence");
+  assert.ok(motion.includes("if (!openRef.current) setPresent(false)"), "Stale completion cannot hide a reopened composer");
+  assert.ok(motion.includes("media.revert()") && motion.includes("animation.kill()"));
+  assert.ok(shell.includes("hidden={!composerPresent} inert={!composerOpen} aria-hidden={!composerOpen}"));
+  assert.ok(shell.includes("composerPresent ? \" has-floating-composer\""), "Reading clearance remains until exit completes");
+  assert.ok(shell.includes("composerRef.current?.offsetHeight"), "Scaling never feeds back into measured layout height");
+  assert.ok(css.includes("transform-origin: 50% 100%"));
+  assert.ok(css.includes(".composer-launcher-position") && css.includes(".has-composer-launcher"), "The launcher has its own centered placement and reading clearance");
+  assert.ok(shell.includes('inert={composerOpen} aria-hidden={composerOpen}') && shell.includes('tabIndex={composerOpen ? -1 : 0}'), "Only the active composer surface participates in keyboard navigation");
+  assert.ok(review.indexOf("window.setTimeout") < review.indexOf("if (!items.length) return null"));
+  assert.ok(review.includes("}, 4000)") && review.includes("window.clearTimeout(timeout)"), "Feedback timeout resets and cleans up on replacement/unmount");
+  assert.ok(review.includes("noticeHovered || noticeFocused") && review.includes("onPointerLeave") && review.includes("onBlur"), "The undo action does not expire under pointer or keyboard interaction");
+  assert.ok(review.includes("manager-review-handled") && review.includes("decide(item, null)"), "Handled decisions remain independently undoable");
+  console.log("PASS: reversible minimize tween, completed endpoints and cleanup; source contracts for presence/focus/reduced motion and timed feedback. No browser interaction test performed.");
+} finally { await server.close(); }
