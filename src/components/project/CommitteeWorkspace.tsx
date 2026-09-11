@@ -402,17 +402,6 @@ export function CommitteeWorkspace({
           <AppIcon icon={IconChevronLeft} size={12} />
           <span className="ic-shell-sidebar-label">所有项目</span>
         </button>
-        <button
-          type="button"
-          className="ic-shell-sidebar-toggle"
-          aria-label={sidebarCollapsed ? "展开项目导航" : "折叠项目导航"}
-          title={sidebarCollapsed ? "展开项目导航" : "折叠项目导航"}
-          aria-expanded={!sidebarCollapsed}
-          aria-controls="project-sidebar-navigation"
-          onClick={() => setSidebarCollapsed((value) => !value)}
-        >
-          <AppIcon icon={sidebarCollapsed ? IconSidebarExpand : IconSidebarCollapse} size={14} />
-        </button>
       </div>
       <nav className="ic-shell-navigation" aria-label="项目导航">
         {navigation.map((item) => (
@@ -431,6 +420,17 @@ export function CommitteeWorkspace({
         <button type="button" aria-label="历史对话" title="历史对话" aria-current={historyOpen ? "page" : undefined} onClick={() => { setHistoryOpen(true); setMobileNavigationOpen(false); onCloseConversation(true); onCloseReport?.(); }}><AppIcon icon={IconHistory} size={15} /><span className="ic-shell-sidebar-label">历史对话</span></button>
       </nav>
       <div className="ic-shell-sidebar-bottom">
+        <button
+          type="button"
+          className="ic-shell-sidebar-toggle"
+          aria-label={sidebarCollapsed ? "展开项目导航" : "折叠项目导航"}
+          title={sidebarCollapsed ? "展开项目导航" : "折叠项目导航"}
+          aria-expanded={!sidebarCollapsed}
+          aria-controls="project-sidebar-navigation"
+          onClick={() => setSidebarCollapsed((value) => !value)}
+        >
+          <AppIcon icon={sidebarCollapsed ? IconSidebarExpand : IconSidebarCollapse} size={14} />
+        </button>
         {isManager && <button type="button" className="manager-settings-trigger" aria-label="项目设置与任务" title="项目设置与任务" onClick={() => setSettingsVisible(true)}><AppIcon icon={IconSettings} size={15} /><span className="ic-shell-sidebar-label">项目设置与任务</span></button>}
       </div>
     </>

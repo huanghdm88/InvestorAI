@@ -204,7 +204,6 @@ export function CommitteeOverview({
           <div><dt>融资阶段</dt><dd>{identity.round}</dd></div>
           <div><dt>{isPreview ? "演示阶段" : project.currentLifecycleStage && project.currentLifecycleStage !== project.lifecycleStage ? "回看阶段" : "当前状态"}</dt><dd className="ic-stage-value"><ProjectStageTrack key={project.id} project={project} manager={showCurrentFocus} onStageChange={onStageChange} /></dd></div>
         </dl>
-        {project.id === "proj-aurora" && onPreviewStage && <div className="ic-stage-scenario"><label htmlFor="project-stage-scenario">阶段情景</label><select id="project-stage-scenario" value={isPreview ? project.lifecycleStage : "actual"} onChange={(event) => onPreviewStage(event.target.value === "actual" ? project.currentLifecycleStage ?? "decided" : event.target.value as ProjectLifecycleStage)}><option value="actual">实际进度 · {getProjectIdentity({ ...project, lifecycleStage: project.currentLifecycleStage }).status}</option><option value="signed">签约情景</option><option value="funded">出资情景</option><option value="post">投后情景</option></select>{isPreview && <span>实际进度：{getProjectIdentity({ ...project, lifecycleStage: project.currentLifecycleStage }).status}</span>}</div>}
         <p className="ic-overview-description">{brief.description}</p>
         {!isEarlyStage && !isLateStage && <><div className="ic-overview-agenda">
           <span>{isDecision ? "本次投决" : "尽调重点"}</span>
