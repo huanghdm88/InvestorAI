@@ -5,6 +5,8 @@ import { ProjectMarketPanel } from "./ProjectMarketPanel";
 import { QuestionReasoningDialog } from "./QuestionReasoningDialog";
 import { focusQuestionId } from "./CommitteeAnalysisQuestions";
 import { EarlyStageWorkspace } from "./EarlyStageWorkspace";
+import { LateStageWorkspace } from "./LateStageWorkspace";
+import { isProjectStagePreview } from "@/src/lib/decision-workspace";
 
 import { AppIcon } from "@/src/components/ui/app-icon";
 import {
@@ -32,6 +34,8 @@ interface CommitteeOverviewProps {
   showCurrentFocus?: boolean;
   reasoningScopeKey?: string;
   decisionContent?: ReactNode;
+  afterQuestions?: ReactNode;
+  onPreviewStage?: (stage: ProjectLifecycleStage) => void;
   onStageChange?: (stage: ProjectLifecycleStage) => void;
   onAdvanceStage?: (stage: ProjectLifecycleStage) => void;
   onEarlyStageSave?: (stage: EarlyStageKey, values: Record<string, string>) => void;
@@ -88,7 +92,7 @@ function QuestionRow({
                 <dd>{question.thesis}</dd>
               </div>
               <div>
-                <dt>会上需确认</dt>
+                <dt>仍需验证</dt>
                 <dd>{question.neededEvidence}</dd>
               </div>
             </dl>
@@ -153,6 +157,8 @@ export function CommitteeOverview({
   showCurrentFocus = true,
   reasoningScopeKey,
   decisionContent,
+  afterQuestions,
+  onPreviewStage,
   onStageChange,
   onAdvanceStage,
   onEarlyStageSave,
@@ -161,6 +167,8 @@ export function CommitteeOverview({
   const identity = getProjectIdentity(project);
   const isDecision = project.lifecycleStage === "decided";
   const isEarlyStage = project.lifecycleStage === "contact" || project.lifecycleStage === "intake" || project.lifecycleStage === "approved";
+  const isLateStage = ["signed", "funded", "post"].includes(project.lifecycleStage ?? "");
+  const isPreview = isProjectStagePreview(project);
   const decision = project.decision;
   const questions = getCoreQuestions(brief);
   const otherQuestions = brief.questions.filter((question) => question.scope !== "core");
@@ -185,20 +193,21 @@ export function CommitteeOverview({
   useEffect(() => { setReasoningContext(null); }, [project.lifecycleStage, reasoningScopeKey]);
 
   return (
-    <div className="ic-overview" aria-label={`${project.name}${isDecision ? "投决概览" : "会前概览"}`}>
+    <div className="ic-overview" aria-label={`${project.name}阶段工作台`}>
       <span className="sr-only" role="status">当前阶段：{isDecision ? "投决" : identity.status}</span>
       <section className="ic-overview-project" aria-labelledby="ic-overview-project-title">
         <div className="ic-overview-title-row">
           <h1 id="ic-overview-project-title">{identity.name}</h1>
-          {(brief.isDemo || isDecision) && <span className="ic-overview-demo">{isDecision ? "投决情景演示" : "演示项目"}</span>}
+          {(brief.isDemo || isDecision) && <span className="ic-overview-demo">{isPreview ? "阶段情景演示" : isDecision ? "投决情景演示" : "演示项目"}</span>}
         </div>
         <dl className="ic-overview-project-state">
           <div><dt>融资阶段</dt><dd>{identity.round}</dd></div>
-          <div><dt>{project.currentLifecycleStage && project.currentLifecycleStage !== project.lifecycleStage ? "回看阶段" : "当前状态"}</dt><dd className="ic-stage-value"><ProjectStageTrack key={project.id} project={project} manager={showCurrentFocus} onStageChange={onStageChange} /></dd></div>
+          <div><dt>{isPreview ? "演示阶段" : project.currentLifecycleStage && project.currentLifecycleStage !== project.lifecycleStage ? "回看阶段" : "当前状态"}</dt><dd className="ic-stage-value"><ProjectStageTrack key={project.id} project={project} manager={showCurrentFocus} onStageChange={onStageChange} /></dd></div>
         </dl>
+        {project.id === "proj-aurora" && onPreviewStage && <div className="ic-stage-scenario"><label htmlFor="project-stage-scenario">阶段情景</label><select id="project-stage-scenario" value={isPreview ? project.lifecycleStage : "actual"} onChange={(event) => onPreviewStage(event.target.value === "actual" ? project.currentLifecycleStage ?? "decided" : event.target.value as ProjectLifecycleStage)}><option value="actual">实际进度 · {getProjectIdentity({ ...project, lifecycleStage: project.currentLifecycleStage }).status}</option><option value="signed">签约情景</option><option value="funded">出资情景</option><option value="post">投后情景</option></select>{isPreview && <span>实际进度：{getProjectIdentity({ ...project, lifecycleStage: project.currentLifecycleStage }).status}</span>}</div>}
         <p className="ic-overview-description">{brief.description}</p>
-        {!isEarlyStage && <><div className="ic-overview-agenda">
-          <span>{isDecision ? "本次投决" : "本次审议"}</span>
+        {!isEarlyStage && !isLateStage && <><div className="ic-overview-agenda">
+          <span>{isDecision ? "本次投决" : "尽调重点"}</span>
           <StageTypewriter text={isDecision ? decision?.summary ?? "投决结果待确认。" : brief.agenda} stage={project.lifecycleStage ?? "diligence"} projectId={project.id} />
         </div>
 
@@ -226,7 +235,7 @@ export function CommitteeOverview({
         </StageMotion>
         </>}
 
-        <button
+        {!isEarlyStage && !isLateStage && <><button
           type="button"
           className="ic-overview-summary-toggle"
           aria-expanded={summaryExpanded}
@@ -249,11 +258,11 @@ export function CommitteeOverview({
               </div>
             </dl>
           </div>
-        )}
+        )}</>}
       </section>
 
       <StageMotion stage={project.lifecycleStage ?? "diligence"} projectId={project.id}>
-      {isDecision ? decisionContent : isEarlyStage ? <EarlyStageWorkspace project={project} manager={showCurrentFocus} onAdvanceStage={onAdvanceStage} onSave={onEarlyStageSave} /> : <>
+      {isLateStage ? <LateStageWorkspace project={project} role={showCurrentFocus ? "investment-director" : "committee-lead"} onViewSource={onViewSource} onAsk={onAsk} /> : isDecision ? decisionContent : isEarlyStage ? <EarlyStageWorkspace project={project} manager={showCurrentFocus} onAdvanceStage={onAdvanceStage} onSave={onEarlyStageSave} onViewSource={onViewSource} /> : <>
       {typeof beforeQuestions === "function" ? beforeQuestions(openReasoning) : beforeQuestions}
       {showCurrentFocus && <section className="ic-overview-questions" aria-labelledby="ic-overview-questions-title">
         <div className="ic-overview-section-heading">
@@ -279,7 +288,7 @@ export function CommitteeOverview({
         ) : (
           <div className="ic-overview-empty">
             <AppIcon icon={IconFileText} size={22} />
-            <h3>{hasIndexedMaterials ? "尚未形成可供上会的核心质询" : "资料尚不足以形成核心质询"}</h3>
+            <h3>{hasIndexedMaterials ? "待整理关键验证问题" : "资料尚不足以形成关键问题"}</h3>
             <p>
               {hasIndexedMaterials
                 ? "需要结合最新尽调结论与本次投资主张，确认哪些未决事项可能改变判断。"
@@ -327,7 +336,8 @@ export function CommitteeOverview({
         )}
       </section>}</>}
       </StageMotion>
-      {(!isEarlyStage || showCurrentFocus) && <ProjectMarketPanel key={project.id} project={project} brief={brief} onViewSource={onViewSource} />}
+      {!isEarlyStage && !isLateStage && <ProjectMarketPanel key={project.id} project={project} brief={brief} onViewSource={onViewSource} />}
+      {project.lifecycleStage === "diligence" && afterQuestions}
       <QuestionReasoningDialog context={reasoningContext} onClose={() => setReasoningContext(null)}
         onViewSource={onViewSource} onAsk={onAsk} returnFocusTo={reasoningTrigger.current} />
     </div>

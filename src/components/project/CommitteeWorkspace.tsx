@@ -56,6 +56,7 @@ const ReportContent = lazy(() => import("@/src/components/chat/ReportContent").t
 interface CommitteeWorkspaceProps {
   role?: AuthRole;
   onStageChange?: (stage: ProjectLifecycleStage) => void;
+  onPreviewStage?: (stage: ProjectLifecycleStage) => void;
   onAdvanceStage?: (stage: ProjectLifecycleStage) => void;
   onEarlyStageSave?: (stage: EarlyStageKey, values: Record<string, string>) => void;
   notificationContent?: ReactNode;
@@ -136,6 +137,7 @@ function formatDate(value: string) {
 export function CommitteeWorkspace({
   role = "committee-lead",
   onStageChange,
+  onPreviewStage,
   onAdvanceStage,
   onEarlyStageSave,
   notificationContent,
@@ -191,7 +193,7 @@ export function CommitteeWorkspace({
   });
   const lastActivationRef = useRef(assistantActivationKey);
   const [reportDrafts, setReportDrafts] = useState<Record<string, ManagerReportDraft>>({});
-  const draftKey = `${project.id}:${project.lifecycleStage === "decided" ? "decided" : "diligence"}`;
+  const draftKey = `${role}:${project.id}:${project.lifecycleStage ?? "diligence"}`;
   const reportDraft = reportDrafts[draftKey] ?? createManagerReportDraft(project);
   const lastCompletedReportRef = useRef<Record<string, string>>({});
   const accountRef = useRef<HTMLDetailsElement>(null);
@@ -232,6 +234,7 @@ export function CommitteeWorkspace({
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [reports, project.id],
   );
+  const stageReports = projectReports.filter((entry) => ("projectStage" in entry.block ? entry.block.projectStage ?? "diligence" : "diligence") === (project.lifecycleStage ?? "diligence"));
   const reviewItems = useMemo(() => isManager ? getPendingProjectChanges(project, projectReports) : [], [isManager, project, projectReports]);
   const pendingReviews = reviewItems.filter((item) => !reviewDecisions[item.key]);
   const filteredProjects = useMemo(() => {
@@ -291,12 +294,12 @@ export function CommitteeWorkspace({
   }, [project, draftKey]);
 
   useEffect(() => {
-    const latest = projectReports[0];
-    if (project.lifecycleStage === "decided") return;
+    const latest = stageReports[0];
+    if (project.lifecycleStage !== "diligence") return;
     if (!latest || lastCompletedReportRef.current[project.id] === latest.id) return;
     lastCompletedReportRef.current[project.id] = latest.id;
     const block = latest.block;
-    if (block.kind !== "project-work-report" || !block.sourceReport || block.revision || block.projectStage === "decided") return;
+    if (block.kind !== "project-work-report" || !block.sourceReport || block.revision || (block.projectStage && block.projectStage !== "diligence")) return;
     const selectedId = block.sourceReport.id;
     setReportDrafts((previous) => ({ ...previous, [draftKey]: { ...(previous[draftKey] ?? createManagerReportDraft(project)), selectedId } }));
   }, [project.id, project.lifecycleStage, projectReports, draftKey]);
@@ -372,7 +375,12 @@ export function CommitteeWorkspace({
 
   const openPendingReview = () => {
     navigate("overview");
-    window.requestAnimationFrame(() => document.getElementById("manager-pending-changes")?.scrollIntoView({ block: "start" }));
+    window.requestAnimationFrame(() => {
+      const target = document.getElementById("manager-pending-changes");
+      const fold = target?.closest("details");
+      if (fold) fold.open = true;
+      target?.scrollIntoView({ block: "start" });
+    });
   };
 
   const ask = (context: QuestionContext) => {
@@ -526,6 +534,7 @@ export function CommitteeWorkspace({
                 <CommitteeOverview
                   project={project}
                   onStageChange={onStageChange}
+                  onPreviewStage={onPreviewStage}
                   onAdvanceStage={onAdvanceStage}
                   onEarlyStageSave={onEarlyStageSave}
                   onViewSource={onViewSource}
@@ -533,8 +542,9 @@ export function CommitteeWorkspace({
                   onOpenKnowledge={() => navigate("knowledge")}
                   reasoningScopeKey={`${draftKey}:${reportDraft.selectedId}`}
                   showCurrentFocus={isManager}
-                  beforeQuestions={(openReasoning) => isManager ? <><ProjectChangesPanel project={project} items={reviewItems} decisions={reviewDecisions} onDecide={(key, decision) => onReviewDecision?.(key, decision)} onViewSource={onViewSource} onOpenReasoning={openReasoning} /><ManagerReportPanel key={draftKey} project={project} draft={reportDraft} onDraftChange={(draft) => setReportDrafts((previous) => ({ ...previous, [draftKey]: draft }))} reports={projectReports} onOpenReport={onOpenReport} onViewSource={onViewSource} /></> : <CommitteeAnalysisQuestions project={project} reports={projectReports} onOpenReport={onOpenReport} onViewSource={onViewSource} onAsk={ask} onOpenReasoning={openReasoning} />}
-                  decisionContent={<DecisionWorkspacePanel key={project.id} project={project} role={role} onAction={(action) => onDecisionAction?.(action)} onAsk={ask} onViewSource={onViewSource} onDraftTask={onDraftTask} reportPanel={<ManagerReportPanel key={draftKey} project={project} draft={reportDraft} readOnly={!isManager} onDraftChange={(draft) => setReportDrafts((previous) => ({ ...previous, [draftKey]: draft }))} reports={projectReports} onOpenReport={onOpenReport} onViewSource={onViewSource} />} />}
+                  beforeQuestions={(openReasoning) => <><ProjectChangesPanel project={project} items={isManager ? reviewItems : project.contextChanges ?? []} decisions={reviewDecisions} readOnly={!isManager} onDecide={(key, decision) => onReviewDecision?.(key, decision)} onViewSource={onViewSource} onOpenReasoning={openReasoning} />{!isManager && <CommitteeAnalysisQuestions project={project} reports={stageReports} onOpenReport={onOpenReport} onViewSource={onViewSource} onAsk={ask} onOpenReasoning={openReasoning} />}</>}
+                  afterQuestions={<ManagerReportPanel key={draftKey} project={project} draft={reportDraft} readOnly={!isManager} onDraftChange={(draft) => setReportDrafts((previous) => ({ ...previous, [draftKey]: draft }))} reports={stageReports} onOpenReport={onOpenReport} onViewSource={onViewSource} />}
+                  decisionContent={<DecisionWorkspacePanel key={`${project.id}:${role}`} project={project} role={role} onAction={(action) => onDecisionAction?.(action)} onAsk={ask} onViewSource={onViewSource} onDraftTask={onDraftTask} reportPanel={<ManagerReportPanel key={draftKey} project={project} draft={reportDraft} readOnly={!isManager} onDraftChange={(draft) => setReportDrafts((previous) => ({ ...previous, [draftKey]: draft }))} reports={stageReports} onOpenReport={onOpenReport} onViewSource={onViewSource} />} />}
                 />
               )}
               {section === "knowledge" && (

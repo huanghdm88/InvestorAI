@@ -43,7 +43,7 @@ export function DecisionWorkspacePanel({ project, role, onAction, onAsk, onViewS
   const fileInput = useRef<HTMLInputElement>(null);
   if (!data) return <p className="decision-empty">投决结果待确认。</p>;
   const item = data.items.find((entry) => entry.id === detailId);
-  const attention = getDecisionAttention(data, role);
+  const attention = getDecisionAttention(data, role).filter((entry) => manager || entry.kind === "change");
   const conditions = data.items.filter((entry) => entry.kind === "condition");
   const incomplete = conditions.filter((entry) => entry.status !== "verified");
   const linked = new Set(data.items.map((entry) => entry.questionId));
@@ -71,18 +71,18 @@ export function DecisionWorkspacePanel({ project, role, onAction, onAsk, onViewS
       </section>
     </section>
 
-    {manager && <section className="decision-attention" aria-labelledby="decision-attention-title">
-      <div className="ic-overview-section-heading"><h2 id="decision-attention-title">当前关注</h2><span>{attention.length ? `${attention.length} 项` : "暂无新增事项"}</span></div>
+    <section className="decision-attention" aria-labelledby="decision-attention-title">
+      <div className="ic-overview-section-heading"><h2 id="decision-attention-title">{manager ? "当前关注" : "需复核的重大变化"}</h2><span>{attention.length ? `${attention.length} 项` : "暂无新增事项"}</span></div>
       {attention.length ? <ol className="decision-attention-list">{attention.map((entry, index) => <li key={entry.id}>
         <span className="ic-question-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
         <div className="decision-attention-copy"><div><h3>{entry.title}</h3><span className="ic-question-status">{decisionStatusLabels[entry.status]}</span></div><p>{entry.impact}</p><span className="decision-meta">{entry.kind === "change" ? "重大变化" : entry.milestone} · {manager ? entry.owner : "影响原决议落实"}</span></div>
         <button type="button" className="ic-overview-button" onClick={(event) => openItem(entry, event.currentTarget)}>查看详情 <AppIcon icon={IconArrowRight} size={12} /></button>
       </li>)}</ol> : <p className="decision-empty">{data.result === "pending" ? "确认投决结果后，再整理关键条件与变化。" : "暂无需再次审议的重大变化；条件落实情况可在投决结论中查看。"}</p>}
-    </section>}
+    </section>
 
     {reportPanel}
 
-    <details open key={`${project.id}:${role}:archive`} className="decision-question-archive"><summary>会前关注去向 <AppIcon icon={IconChevronDown} size={11} /></summary><div>{oldQuestions.map((question) => <div key={question.id}><span>{question.question}</span><small>{data.items.find((entry) => entry.questionId === question.id)?.kind === "change" ? "转为变化评估" : linked.has(question.id) ? "转为决议落实" : question.scope === "resolved" ? "已澄清" : "保留待判断"}</small></div>)}</div></details>
+    <details open key={`${project.id}:${role}:archive`} className="decision-question-archive"><summary>会前关注去向 <AppIcon icon={IconChevronDown} size={11} /></summary><div>{oldQuestions.map((question) => <div key={question.id}><span>{question.question}</span><small>{data.items.find((entry) => entry.questionId === question.id)?.kind === "change" ? "重大变化 · 待复核" : linked.has(question.id) ? "已纳入决议要求" : question.scope === "resolved" ? "已澄清" : "委员建议 · 未纳入决议"}</small></div>)}</div></details>
 
     <Sheet modal={false} open={resolutionOpen} onOpenChange={setResolutionOpen}><SheetContent className="decision-detail-sheet" onCloseAutoFocus={restoreFocus}>
       <SheetTitle>投决结论</SheetTitle><SheetDescription>{project.name} · {data.version} · 情景演示</SheetDescription>

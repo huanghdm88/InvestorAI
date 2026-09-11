@@ -107,9 +107,9 @@ try {
       assert.ok(!panel.includes("查看关联关注"), "No link targets the removed committee focus section");
       assert.ok(!panel.includes("现有演示分析") && !panel.includes("报告分析整理"), "Remove supplemental notes rather than replacing them with more descriptions");
       assert.ok(!panel.includes('data-icon="plus"'), "No decorative expansion icon");
-      assert.equal((panel.match(/aria-expanded="false"/g) ?? []).length, questions.length, "Each evidence disclosure starts collapsed and is keyboard-operable");
+      assert.equal((panel.match(/aria-expanded="true"/g) ?? []).length, questions.length, "Project evidence is open by default and remains keyboard-operable");
       assert.ok(!/125亿元|24\.97|32\.70|16\.28|1\.4606|3\.5459/.test(panel), "No unrelated screenshot data");
-    } else assert.ok(panel.includes("当前暂无可引用的投资分析结论"));
+    } else assert.ok(panel.includes("项目依据待补充") || panel.includes("待验证假设"), "Shared sources can seed questions without a personal report");
   }
   const growth = getCommitteeAnalysisQuestions(project, reports).find((item) => item.id === "aurora-analysis-c-3");
   assert.deepEqual(growth.relatedQuestionIds, ["aurora-customer-growth"]);
@@ -131,7 +131,7 @@ try {
   assert.ok(shell.includes("focusComposerAfterNavigation.current ?"), "Mobile navigation does not always invoke the keyboard");
   assert.ok(shell.includes("target ?? mobileTriggerRef.current ?? brandTriggerRef.current"), "Directory navigation restores focus even after the mobile trigger unmounts");
   assert.ok(composer.includes("observer.observe(textarea)") && composer.includes("if (width === previousWidth) return"), "Hidden draft height is remeasured without resize feedback loops");
-  assert.ok(app.includes('`${authSession?.role ?? "investment-director"}:${currentProjectId}`'), "Home drafts are role- and project-scoped");
+  assert.ok(app.includes("const homeDraftKey = personalWorkspaceKey(activeRole, currentProjectId, currentStage)"), "Home drafts are role-, project-, and stage-scoped");
   assert.ok(app.includes('const saveRevision = "sourceReport" in item &&'), "Context acceptance does not create report versions");
   assert.ok(app.includes('versions: revision ? [revision, ...previous.versions] : previous.versions'));
   assert.ok(app.includes('applyProjectUpdate(p, { files: [...incoming, ...p.files], status: "parsing" }, changeId, changeAt)'), "Quick-upload records new materials once");

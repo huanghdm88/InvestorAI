@@ -12,7 +12,7 @@ try {
   const { CommitteeWorkspace } = await server.ssrLoadModule("/src/components/project/CommitteeWorkspace.tsx");
   const { ManagerReportPanel, getCurrentReportCandidates, createManagerReportDraft, getMaterialSignature } = await server.ssrLoadModule("/src/components/project/ManagerReportPanel.tsx");
   const { hasVisibleConversation, conversationHistoryTitle, ConversationHistory } = await server.ssrLoadModule("/src/components/project/ConversationHistory.tsx");
-  const { buildManagerTaskResult, buildManagerTaskProcess, buildManagerTaskChoice, getManagerTaskIntent, managerTaskLabels } = await server.ssrLoadModule("/src/lib/manager-tasks.ts");
+  const { buildManagerTaskResult, buildManagerTaskProcess, buildManagerTaskChoice, getManagerTaskIntent, getManagerTaskLabel, managerTaskLabels } = await server.ssrLoadModule("/src/lib/manager-tasks.ts");
   const { ChatComposer } = await server.ssrLoadModule("/src/components/chat/ChatComposer.tsx");
   const { ReportContent } = await server.ssrLoadModule("/src/components/chat/ReportContent.tsx");
   const { ModePickCard } = await server.ssrLoadModule("/src/components/chat/ModePickCard.tsx");
@@ -23,6 +23,7 @@ try {
   const { extractConversationReports } = await server.ssrLoadModule("/src/lib/project-reports.ts");
   const { buildReportHtml } = await server.ssrLoadModule("/src/lib/report-html.ts");
   const noop = () => {};
+  const { getStageTools } = await server.ssrLoadModule("/src/lib/stage-tools.ts");
   const render = (component, props) => renderToStaticMarkup(React.createElement(LocaleProvider, null, React.createElement(TooltipProvider, null, React.createElement(component, props))));
   const composer = React.createElement("textarea", { "aria-label": "manager-persistent-input", defaultValue: "" });
   const actions = { onSelectProject: noop, onNewProject: noop, onOpenConversation: noop, onNewConversation: noop,
@@ -33,14 +34,20 @@ try {
     for (const projectStage of [undefined, "contact", "intake", "approved", "diligence", "decided", "signed", "funded", "post"]) {
       for (const compact of [false, true]) {
         const html = render(ChatComposer, { userRole, projectStage, compact, onSend: noop, onStop: noop, generating: false, initialDraft: "尚未发送的内容" });
-        const expected = compact || userRole !== "investment-director" ? [] : projectStage === "diligence" ? ["财法分析"] : projectStage === "decided" ? ["投决纪要", "交割条件"] : [];
+        const expected = compact || !projectStage ? [] : getStageTools(projectStage, userRole).map((tool) => tool.label);
         for (const label of ["财法分析", "投决纪要", "交割条件"]) {
           const tag = html.match(new RegExp(`<button[^>]*>${label}</button>`))?.[0];
           assert.equal(Boolean(tag), expected.includes(label), `${userRole}/${projectStage}/${compact}: ${label}`);
           if (tag) assert.ok(!tag.includes('disabled=""') && tag.includes('type="button"'), "New shortcuts remain visually available");
         }
         assert.ok(html.includes("尚未发送的内容"));
-        if (!compact && userRole === "investment-director") {
+        if (!compact && projectStage) {
+          for (const label of expected) {
+            const tag = html.match(new RegExp(`<button[^>]*>${label}</button>`))?.[0];
+            assert.ok(tag && !tag.includes('disabled=""'), `${projectStage}: stage command is available`);
+          }
+          assert.ok(!html.includes(">模拟投委会</button>"), "Stage tools cannot inherit an unrelated simulation");
+        } else if (!compact && userRole === "investment-director") {
           for (const label of ["交叉验证", "生成报告"]) {
             const tag = html.match(new RegExp(`<button[^>]*>${label}</button>`))?.[0];
             assert.ok(tag && !tag.includes('disabled=""'), "Existing shortcuts remain enabled");
@@ -59,7 +66,7 @@ try {
       if (early) {
         assert.ok(!html.includes('id="ic-overview-questions-title"') && !html.includes('id="manager-current-report-title"'), `${project.id}/${role}: early stages have no current focus or current report`);
       } else {
-        assert.equal(html.includes('id="manager-current-report-title"'), role === "investment-director" || project.lifecycleStage === "decided");
+        assert.ok(html.includes('id="manager-current-report-title"'));
       }
       assert.equal((html.match(/aria-label="manager-persistent-input"/g) ?? []).length, 1);
     }
@@ -83,9 +90,9 @@ try {
     assert.equal((committee.match(/aria-label="manager-persistent-input"/g) ?? []).length, 1, "Both roles share one mounted composer");
     const committeeComposer = committee.match(/<div[^>]*id="project-floating-composer"[^>]*>/)?.[0] ?? "";
     const managerComposer = manager.match(/<div[^>]*id="project-floating-composer"[^>]*>/)?.[0] ?? "";
-    assert.ok(committeeComposer.includes('hidden=""') && committeeComposer.includes('inert=""') && committeeComposer.includes('aria-hidden="true"') && !committee.includes("manager-current-report-title"));
+    assert.ok(committeeComposer.includes('hidden=""') && committeeComposer.includes('inert=""') && committeeComposer.includes('aria-hidden="true"') && committee.includes("manager-current-report-title"));
     assert.ok(managerComposer && !managerComposer.includes('hidden=""') && !managerComposer.includes('inert=""'));
-    assert.ok(manager.indexOf("manager-current-report-title") < manager.indexOf('id="ic-overview-questions-title"'));
+    assert.ok(manager.indexOf("manager-current-report-title") > manager.indexOf('id="ic-overview-questions-title"'), "Questions precede the historical report artifact");
     const stage = render(ProjectStageTrack, { project });
     assert.ok(stage.includes('aria-expanded="false"') && /class="ic-stage-reveal"[^>]*aria-hidden="true"[^>]*inert=""/.test(stage), "Stage overview stays mounted for its closing animation, but is hidden and inert by default");
     assert.ok(stage.includes('class="ic-stage-steps"') && stage.includes('tabindex="-1"') && stage.includes('data-icon="right"'));
@@ -129,7 +136,7 @@ try {
       assert.deepEqual(blocks.map((block) => block.kind), ["text", "project-work-report"]);
       const report = blocks[1];
       assert.equal(report.taskKind, kind);
-      assert.ok(report.title.includes(project.name) && report.title.includes(managerTaskLabels[kind]));
+      assert.ok(report.title.includes(project.name) && report.title.includes(getManagerTaskLabel(kind, project.lifecycleStage)));
       assert.ok(report.summary && !report.summary.includes("未进行新增核验"), "Summary contains project findings, not a supplemental demo explanation");
       const allowed = getCommitteeBrief(project).questions.flatMap((question) => question.sources);
       assert.ok(report.citations.every((source) => allowed.some((candidate) => JSON.stringify(candidate) === JSON.stringify(source))));
@@ -144,7 +151,7 @@ try {
       assert.equal(extracted.length, 1);
       assert.equal(extracted[0].block.taskKind, kind);
       const reader = render(CommitteeWorkspace, { ...shared, role: "investment-director", openReport: report });
-      assert.ok(reader.includes("ic-manager-report-reader") && reader.includes("manager-persistent-input") && reader.includes(managerTaskLabels[kind]));
+      assert.ok(reader.includes("ic-manager-report-reader") && reader.includes("manager-persistent-input") && reader.includes(getManagerTaskLabel(kind, project.lifecycleStage)));
       assert.equal(buildManagerTaskProcess(project, kind).phases.length, 3);
     }
   }
