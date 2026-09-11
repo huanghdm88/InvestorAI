@@ -7,6 +7,16 @@ export const decisionStatusLabels = { missing: "待补材料", review: "待复�
 export const inDecisionStage = (project: Project) => project.lifecycleStage === "decided";
 
 const LIFECYCLE_ORDER: ProjectLifecycleStage[] = ["contact", "intake", "approved", "diligence", "decided", "signed", "funded", "post"];
+
+/** Preview changes only the viewed phase. The client's workflow remains authoritative. */
+export function previewProjectStage(project: Project, stage: ProjectLifecycleStage, role?: AuthRole): Project {
+  if (project.id !== "proj-aurora" || !["signed", "funded", "post"].includes(stage)) return selectProjectStage(project, stage, role);
+  return { ...project, currentLifecycleStage: project.currentLifecycleStage ?? project.lifecycleStage ?? "decided", lifecycleStage: stage };
+}
+
+export function isProjectStagePreview(project: Project) {
+  return LIFECYCLE_ORDER.indexOf(project.lifecycleStage ?? "contact") > LIFECYCLE_ORDER.indexOf(project.currentLifecycleStage ?? project.lifecycleStage ?? "contact");
+}
 const PROJECT_WORKFLOW_STORAGE_KEY = "invest-wise:project-workflow:v1";
 
 export function restoreProjectWorkflow(projects: Project[]): Project[] {

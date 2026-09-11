@@ -119,6 +119,36 @@ const definitions: Record<string, PathDefinition> = {
 
 export function getQuestionPathModel(question: CoreQuestion | QuestionContext): QuestionPathModel {
   const id = "questionId" in question ? question.questionId : question.id;
+  if ("stage" in question && question.stage === "signed") return {
+    premise: `以签署文件与对应方案逐项核对，签署完成不代表交割条件已满足。比较基准：${question.thesis}`,
+    fork: "签署内容与方案一致、证据仍有缺口，还是存在需授权确认的条款偏离？",
+    conclusion: `当前签约事项：${question.context} 交割影响：${question.impact}`,
+    paths: [
+      { id: `${id}-consistent`, title: "条款一致且条件有据", condition: question.neededEvidence, judgment: "由法务、财务或授权人确认其覆盖范围；不自动授权交割。", action: "保留签署版本、逐项证明和确认记录。" },
+      { id: `${id}-incomplete`, title: "条件证明尚不完整", condition: "文件仅覆盖部分要求，或尚缺有效签署、法律解释和核验记录。", judgment: "相应条件继续列为未决，不把文件已收取等同于条件已满足。", action: "明确责任人、补件期限及交割前必须取得的证明。" },
+      { id: `${id}-departure`, title: "出现实质条款偏离", condition: "签署内容改变已批准的权利、义务、金额或交割边界。", judgment: "需由有权限人员判断是否接受偏离、补充审批或重新审议。", action: "整理原要求、签署条款、法律意见和具体影响，不自行豁免。" },
+    ],
+  };
+  if ("stage" in question && question.stage === "funded") return {
+    premise: `以付款、股份及生效权利的实际证据为基线，不以拟投资数据替代实际结果。比较基准：${question.thesis}`,
+    fork: "实际出资、持股和权利是否与有效文件一致，归档缺口是否影响正式确认？",
+    conclusion: `当前出资事项：${question.context} 对交易确认与投后交接的影响：${question.impact}`,
+    paths: [
+      { id: `${id}-reconciled`, title: "实际结果完成勾稽", condition: question.neededEvidence, judgment: "仅在证明覆盖范围内记录确认结果，基线发布仍需负责人确认。", action: "保留实际金额、持股、交割日期、来源版本和确认人。" },
+      { id: `${id}-archive-gap`, title: "已核对事实仍有归档缺口", condition: "实际结果已有部分有效证明，但登记、权利或归档材料尚不完整。", judgment: "分别展示已确认事实与待补项，不将全套交接标记为完成。", action: "逐项补充登记或权利证明，明确责任人与期限。" },
+      { id: `${id}-difference`, title: "实际结果偏离有效方案", condition: "付款金额、股份、主体或权利与有效文件出现实质差异。", judgment: "由授权人员判断补正和升级方式，不自动重写实际基线。", action: "形成方案、协议与实际结果对照，提交相关责任人核查。" },
+    ],
+  };
+  if ("stage" in question && question.stage === "post") return {
+    premise: `使用已确认的实际交易基线与同口径最新数据，融资意向不作为新估值或实际回报。比较基准：${question.thesis}`,
+    fork: "最新变化属于可解释波动、需持续跟踪的偏差，还是需要重新判断的重大事项？",
+    conclusion: `当前投后事项：${question.context} 经营、治理或价值影响：${question.impact}`,
+    paths: [
+      { id: `${id}-explained`, title: "变化可解释且依据完整", condition: question.neededEvidence, judgment: "由负责人确认解释及适用期间，维持可追溯的原基线。", action: "保存核验记录，并在下一期继续比较同口径指标。" },
+      { id: `${id}-monitor`, title: "偏差持续但影响未明", condition: "部分原因已有解释，持续性、现金影响或治理后果仍需补证。", judgment: "明确跟踪指标和复核节点，不直接变更估值或投资策略。", action: "取得管理层说明与后续数据，确认责任人及复核期限。" },
+      { id: `${id}-escalate`, title: "重大变化需重新判断", condition: "偏差实质影响现金安全、关键假设、治理权利或价值实现。", judgment: "由有权限人员决定是否升级治理、调整估值、参与融资或启动退出分析。", action: "提交基线、最新事实、影响及备选方案，不自动执行投资或治理动作。" },
+    ],
+  };
   if ("stage" in question && question.stage === "decided") return {
     premise: "以已确认的有效决议为基准；材料提交、核验完成与授权批准分别处理。当前仅有投决情景演示。",
     fork: "新增依据满足批准要求，还是出现了需要重新判断的实质差异？",

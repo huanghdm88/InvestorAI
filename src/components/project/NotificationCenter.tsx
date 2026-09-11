@@ -41,7 +41,7 @@ export function NotificationCenter({ notifications, onOpenProject, onMarkRead, o
     </ul> : <div className="project-notification-empty"><AppIcon icon={IconBell} size={20} /><strong>{unreadOnly ? "没有未读通知" : "暂无通知"}</strong></div>;
   };
 
-  return <Sheet open={open} onOpenChange={(value) => { setOpen(value); if (value) setFeedback(""); }}>
+  return <Sheet modal={false} open={open} onOpenChange={(value) => { setOpen(value); if (value) setFeedback(""); }}>
     <SheetTrigger asChild>
       <button type="button" className="project-notification-trigger" aria-label={unreadCount ? `通知，${unreadCount} 条未读` : "通知"} title="通知">
         <AppIcon icon={IconBell} size={17} />

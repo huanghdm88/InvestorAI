@@ -618,3 +618,16 @@
   .ic-analysis-question-evidence { transition: opacity 100ms ease; }
   .ic-analysis-evidence-toggle .anticon { transition: none; }
 }
+.ic-stage-scenario { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 14px 0; color: var(--wz-color-text-secondary); font-size: 12px; }
+.ic-stage-scenario select { max-width: 100%; min-height: 32px; padding: 4px 24px 4px 10px; background: var(--wz-color-bg-canvas); color: var(--wz-color-text-primary); border: 1px solid var(--wz-color-border-default); border-radius: 6px; }
+.ic-stage-scenario select:focus-visible { outline: 2px solid var(--wz-color-text-primary); outline-offset: 2px; }
+.ic-recent-changes { margin: 24px 0; border-block: 1px solid var(--wz-color-border-default); }
+.ic-recent-changes > summary { display: flex; align-items: center; gap: 12px; padding: 16px 0; cursor: pointer; font-size: 14px; list-style: none; }
+.ic-recent-changes > summary::-webkit-details-marker { display: none; }
+.ic-recent-changes > summary > span:first-child { font-weight: 600; }
+.ic-recent-changes > summary > span:nth-child(2) { margin-left: auto; color: var(--wz-color-text-secondary); font-size: 12px; }
+.ic-recent-changes > summary > svg { transition: transform 180ms ease; }
+.ic-recent-changes[open] > summary > svg { transform: rotate(180deg); }
+.ic-change-summary { padding: 16px 0; border-top: 1px solid var(--wz-color-border-default); }
+.ic-change-summary h3 { font-size: 14px; font-weight: 600; }
+.ic-change-summary p { margin: 8px 0; color: var(--wz-color-text-secondary); font-size: 13px; line-height: 1.7; }

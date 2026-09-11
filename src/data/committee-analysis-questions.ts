@@ -1,5 +1,6 @@
 import type { Project, QuestionContext, SourceAnchor } from "@/src/types";
 import type { ProjectReportEntry } from "@/src/lib/project-reports";
+import { getCommitteeBrief, getCoreQuestions } from "./committee-briefs";
 
 export interface CommitteeAnalysisQuestion {
   id: string;
@@ -11,7 +12,16 @@ export interface CommitteeAnalysisQuestion {
   neededEvidence: string;
   relatedQuestionIds: string[];
   sources: SourceAnchor[];
-  report: ProjectReportEntry;
+  report?: ProjectReportEntry;
+}
+
+/** Shared evidence can seed a review question without exposing another user's private report. */
+export function getCommitteeEvidenceQuestions(project: Project): CommitteeAnalysisQuestion[] {
+  return getCoreQuestions(getCommitteeBrief(project)).map((question) => ({
+    id: question.id, category: "待验证", question: question.question, conclusion: question.context,
+    thesis: question.thesis, impact: question.impact, neededEvidence: question.neededEvidence,
+    relatedQuestionIds: [question.id], sources: question.sources,
+  }));
 }
 
 export function getCommitteeAnalysisQuestionContext(project: Project, question: CommitteeAnalysisQuestion): QuestionContext {

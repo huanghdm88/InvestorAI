@@ -91,6 +91,9 @@ export interface ReportSubmission {
 export interface Conversation {
   id: string;
   projectId: string;
+  /** Legacy demo conversations belong to the investment manager. */
+  ownerRole?: AuthRole;
+  projectStage?: ProjectLifecycleStage;
   title: string;
   messages: ChatMessage[];
   /** 从交叉验证报告中添加的人工跟进任务；开放状态会将来源项标记为已添加。 */
@@ -563,6 +566,7 @@ export type RunningTaskKind =
  */
 export interface RunningTask {
   id: string;
+  taskSnapshot?: TaskSnapshot;
   projectId: string;
   conversationId: string;
   kind: RunningTaskKind;

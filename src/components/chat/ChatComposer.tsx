@@ -31,6 +31,7 @@ import {
   type UploadRejection,
 } from "@/src/lib/file-upload";
 import type { AuthRole, FileKind, ProjectLifecycleStage, QuestionContext, QueuedChatPrompt, SourceAnchor } from "@/src/types";
+import { getStageTools, stageComposerPlaceholders, stageToolCommands } from "@/src/lib/stage-tools";
 
 type ComposerAttachment = { name: string; size: string; kind: FileKind };
 
@@ -83,6 +84,7 @@ interface ChatComposerProps {
 
 const PLACEHOLDER_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+const EMPTY_PLACEHOLDERS: readonly string[] = [];
 
 function subscribeToReducedMotion(onChange: () => void) {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -172,13 +174,14 @@ const COMMANDS = [
   "@cross-validation",
   "@investment-analysis",
   "@investment-report",
+  ...stageToolCommands,
 ] as const;
 
 /** split 用（带捕获组，保留分隔符） */
-const COMMAND_SPLIT_REGEX = /(@交叉验证|@生成报告|@投资分析|@投资报告|@cross-validation|@investment-analysis|@investment-report)/g;
+const COMMAND_SPLIT_REGEX = new RegExp(`(${COMMANDS.join("|")})`, "g");
 
 /** test 用（非全局，避免 lastIndex 状态问题） */
-const COMMAND_TEST_REGEX = /@交叉验证|@生成报告|@投资分析|@投资报告|@cross-validation|@investment-analysis|@investment-report/;
+const COMMAND_TEST_REGEX = new RegExp(COMMANDS.join("|"));
 
 export const reportComposerCommand = (locale: string, role: AuthRole) => locale === "zh-CN" ? role === "investment-director" ? "@生成报告" : "@投资分析" : "@investment-report";
 export const replaceComposerCommand = (text: string, command: string) => `${command} ${text.replace(COMMAND_SPLIT_REGEX, "").replace(/^(?:模拟投委会|重大变化评估|生成投资报告|生成报告|交叉验证)[：:]?\s*/, "").trim()}`;
@@ -211,7 +214,7 @@ export function ChatComposer({
   queuedPrompts = [],
   onEditQueuedPrompt,
   onDeleteQueuedPrompt,
-  animatedPlaceholders = [],
+  animatedPlaceholders = EMPTY_PLACEHOLDERS,
   showAttachmentDivider = true,
   referenceAttachment = null,
   onReferenceAttachmentConsumed,
@@ -258,14 +261,16 @@ export function ChatComposer({
   // 指令已激活但未传附件时，点击发送按钮弹出的上传提示
   const [hintOpen, setHintOpen] = useState(false);
   const hintTimer = useRef<number | null>(null);
+  const activePlaceholders = useMemo(() => questionContext ? ["输入你想继续追问的问题…"] : projectStage ? [stageComposerPlaceholders[projectStage]] : animatedPlaceholders, [questionContext, projectStage, animatedPlaceholders]);
   const animatedPlaceholder = useAnimatedPlaceholder(
-    animatedPlaceholders,
+    activePlaceholders,
     text.length > 0
   );
   const crossValidationCommand = locale === "zh-CN" ? "@交叉验证" : "@cross-validation";
   const investmentAnalysisCommand = reportComposerCommand(locale, userRole);
   const canCrossValidate = userRole !== "committee-lead";
   const canAnalyzeInvestment = true;
+  const stageShortcuts = projectStage ? getStageTools(projectStage, userRole) : null;
   const lastResetKey = useRef(resetKey);
 
   useEffect(() => {
@@ -279,7 +284,7 @@ export function ChatComposer({
 
   useEffect(() => {
     if (!questionContext) return;
-    const frame = window.requestAnimationFrame(() => taRef.current?.focus());
+    const frame = window.requestAnimationFrame(() => taRef.current?.focus({ preventScroll: true }));
     return () => window.cancelAnimationFrame(frame);
   }, [questionContext?.questionId]);
 
@@ -595,7 +600,7 @@ export function ChatComposer({
           </section>
         )}
 
-        {questionContext && <div className="px-3 pt-3 pb-1">
+        {questionContext && <div key={`${questionContext.projectId}:${questionContext.questionId}`} className="composer-reference-attachment-in px-3 pt-3 pb-1" aria-label="已附加关注事件">
           <QuestionContextCard context={questionContext} onRemove={onRemoveQuestionContext ? () => {
             onRemoveQuestionContext();
             window.requestAnimationFrame(() => taRef.current?.focus());
@@ -654,7 +659,8 @@ export function ChatComposer({
 
         {!compact && <div className="composer-controls flex min-w-0 flex-wrap items-center gap-2 px-3 pt-2.5">
           <div className="composer-shortcuts flex min-w-0 flex-wrap items-center gap-2">
-          {canCrossValidate && (
+          {stageShortcuts?.map((tool) => <Button key={tool.label} type="button" variant="outline" size="sm" onClick={() => insertCommand(`@${tool.label}`)} aria-pressed={text.includes(`@${tool.label}`)} className="aria-pressed:border-[var(--wz-color-border-strong)] aria-pressed:bg-[var(--wz-color-bg-subtle)]">{tool.label}</Button>)}
+          {!stageShortcuts && canCrossValidate && (
             <Button
               type="button"
               variant="outline"
@@ -666,7 +672,7 @@ export function ChatComposer({
               {t("composer.crossValidation")}
             </Button>
           )}
-          {canAnalyzeInvestment && (
+          {!stageShortcuts && canAnalyzeInvestment && (
             <Button
               type="button"
               variant="outline"
@@ -684,17 +690,10 @@ export function ChatComposer({
               {userRole === "investment-director" ? "生成报告" : t("composer.investmentAnalysis")}
             </Button>
           )}
-          {userRole === "investment-director" && !decisionStage && <Button type="button" variant="outline" size="sm" onClick={() => {
+          {!stageShortcuts && userRole === "investment-director" && !decisionStage && <Button type="button" variant="outline" size="sm" onClick={() => {
             const rest = text.replace(COMMAND_SPLIT_REGEX, "").replace(/^模拟投委会[：:]?\s*/, "").trim();
             setText(`模拟投委会：${rest}`); taRef.current?.focus();
           }}>模拟投委会</Button>}
-          {userRole === "investment-director" && projectStage === "diligence" && !decisionStage && (
-            <Button type="button" variant="outline" size="sm" title="功能建设中">财法分析</Button>
-          )}
-          {userRole === "investment-director" && decisionStage && <>
-            <Button type="button" variant="outline" size="sm" title="功能建设中">投决纪要</Button>
-            <Button type="button" variant="outline" size="sm" title="功能建设中">交割条件</Button>
-          </>}
           </div>
           {toolbarActions && <div className="composer-toolbar-actions">{toolbarActions}</div>}
         </div>}
@@ -763,13 +762,13 @@ export function ChatComposer({
               placeholder={
                 showCommandHint
                   ? t("composer.uploadRequired")
-                  : questionContext ? "输入你想继续追问的问题…" : decisionStage ? "核对决议要求，或上传需要复核的材料…" : animatedPlaceholders[0] ?? t("composer.ask")
+                  : questionContext ? "输入你想继续追问的问题…" : projectStage ? stageComposerPlaceholders[projectStage] : decisionStage ? "核对决议要求，或上传需要复核的材料…" : animatedPlaceholders[0] ?? t("composer.ask")
               }
               aria-label={questionContext ? "输入你想继续追问的问题" : t("composer.ask")}
               rows={1}
               className={cn(
                 "thin-scroll relative block h-[var(--wz-control-height-md)] max-h-[220px] min-h-[var(--wz-control-height-md)] w-full resize-none bg-transparent px-1 py-1.5 text-[length:var(--wz-font-size-md)] leading-6 text-transparent caret-[var(--wz-color-text-primary)] outline-none focus-visible:outline-none",
-                animatedPlaceholders.length > 0
+                activePlaceholders.length > 0
                   ? "placeholder:text-transparent"
                   : "placeholder:text-[color:var(--wz-color-text-tertiary)]"
               )}

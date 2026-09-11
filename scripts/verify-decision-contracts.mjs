@@ -92,8 +92,8 @@ try {
   assert.equal(snapshot.project.decision.valuation, "人民币 11.8 亿元");
   const choice = buildManagerTaskChoice("", [file], snapshot);
   assert.equal(choice.taskSnapshot.userRole, "investment-director");
-  assert.equal(choice.options[1].label, "生成报告");
-  assert.equal(choice.options[2].label, "重大变化评估");
+  assert.equal(choice.options[1].label, "交易执行包");
+  assert.equal(choice.options[0].label, "决议落实清单");
   const refs = getCommitteeBrief(base).questions.flatMap((item) => item.sources);
   for (const kind of ["fact-check", "investment-report", "challenge"]) {
     const blocks = buildManagerTaskResult(snapshot.project, kind, "<script>unsafe</script>", [{ ...file, name: "另一份投决议案.pdf" }]);
@@ -127,7 +127,7 @@ try {
   assert.deepEqual(getReportVersions(project, project.decision.approvedReport.id, entries).map((entry) => entry.id), ["report-0"]);
   assert.deepEqual(getReportVersions(project, project.decision.approvedReport.id, entries, "decided").map((entry) => entry.id), ["report-1"]);
   const versionHtml = render(ReportVersionList, { project, selectedId: project.decision.approvedReport.id, reports: entries, onSelectSource: noop, onOpenReport: noop, locked: true });
-  assert.ok(versionHtml.includes("决议后补充报告") && versionHtml.includes("决议落实说明"));
+  assert.ok(versionHtml.includes("决议后补充报告") && versionHtml.includes("交易执行包"));
   assert.ok(!versionHtml.includes(">切换</button>"));
   const props = { project, projects: [project], conversations: [], reports: entries, currentConversationId: null, conversationOpen: false,
     onSelectProject: noop, onNewProject: noop, onOpenConversation: noop, onNewConversation: noop, onCloseConversation: noop, onLogout: noop, onSwitchRole: noop,
@@ -136,7 +136,9 @@ try {
   for (const role of ["investment-director", "committee-lead"]) {
     const html = render(CommitteeWorkspace, { ...props, role });
     for (const label of ["投决结论", "决议落实", "当前报告", "投决情景演示", "会前关注去向", "人民币 11.8 亿元"]) assert.ok(html.includes(label), `${role}: ${label}`);
-    assert.equal(html.includes('id="decision-attention-title"'), role === "investment-director", "Only managers see the decision current-focus section");
+    assert.ok(html.includes('id="decision-attention-title"'));
+    assert.equal(html.includes("当前关注"), role === "investment-director", "Committee review uses a distinct major-change section");
+    if (role === "committee-lead") assert.ok(html.includes("需复核的重大变化") && html.includes("成本降幅未锁定"));
     assert.ok(html.includes(getDecisionExecutionSummary(project.decision)) && !html.includes("以本次决议为执行基准"));
     assert.match(html, /class="decision-execution"[^>]*><details open=""/);
     assert.match(html, /<details open="" class="decision-question-archive"/);
@@ -153,7 +155,7 @@ try {
     assert.ok(removed.includes(project.decision.approvedReport.name) && removed.includes("原文件不在资料库中"));
   }
   const clear = { ...project, decision: { ...project.decision, result: "approved", items: project.decision.items.map((item) => ({ ...item, status: "verified" })) } };
-  assert.ok(!render(CommitteeWorkspace, { ...props, role: "committee-lead", project: clear }).includes("暂无需再次审议的重大变化"));
+  assert.ok(render(CommitteeWorkspace, { ...props, role: "committee-lead", project: clear }).includes("暂无需再次审议的重大变化"));
   assert.ok(render(CommitteeWorkspace, { ...props, role: "investment-director", project: clear }).includes("暂无需再次审议的重大变化"));
   for (let from = 0; from < 10; from++) for (let to = 0; to < 10; to++) for (const direction of [-1, 1]) {
     const roll = getDigitRoll(from, to, direction);
@@ -176,7 +178,7 @@ try {
     assert.ok(frames.every((frame, index) => index === 0 || frame.startsWith(frames[index - 1])));
   }
   assert.deepEqual(getTypewriterFrames("e\u0301👨‍👩‍👧‍👦"), ["e\u0301", "e\u0301👨‍👩‍👧‍👦"]);
-  for (const [candidate, label, text] of [[base, "本次审议", getCommitteeBrief(base).agenda], [project, "本次投决", agenda], [{ ...project, decision: undefined }, "本次投决", "投决结果待确认。"]]) {
+  for (const [candidate, label, text] of [[base, "尽调重点", getCommitteeBrief(base).agenda], [project, "本次投决", agenda], [{ ...project, decision: undefined }, "本次投决", "投决结果待确认。"]]) {
     const html = render(CommitteeOverview, { project: candidate, onViewSource: noop, onAsk: noop, onOpenKnowledge: noop });
     assert.ok(html.includes(`<div class="ic-overview-agenda"><span>${label}</span><p class="ic-agenda-copy">`));
     assert.ok(html.includes(`<span class="sr-only">${text}</span>`));

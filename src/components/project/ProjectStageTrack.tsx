@@ -21,8 +21,8 @@ export function ProjectStageTrack({ project, manager = false, onStageChange }: {
       <ol className="ic-stage-steps" aria-label={onStageChange ? "演示阶段切换，可选择已完成阶段" : "项目阶段，仅供查看，可横向滚动"} tabIndex={open ? 0 : -1}>
         {stages.map(([stage, label]) => {
           const current = project.currentLifecycleStage ?? project.lifecycleStage;
-          const canReview = Boolean(onStageChange && (manager || stage === "diligence" || stage === "decided") && (project.completedLifecycleStages?.includes(stage) || current === stage));
-          return <li key={stage} aria-current={project.lifecycleStage === stage ? "step" : undefined}>{canReview ? <button type="button" aria-pressed={project.lifecycleStage === stage} aria-label={`${current === stage ? "查看" : "回看"}${label}阶段`} onClick={() => onStageChange?.(stage)}>{label}{project.completedLifecycleStages?.includes(stage) && <span className="ic-stage-done" aria-label="已完成" />}</button> : <span>{label}</span>}</li>;
+          const canReview = Boolean(onStageChange && (manager || stages.findIndex(([key]) => key === stage) >= 3) && (project.completedLifecycleStages?.includes(stage) || current === stage));
+          return <li key={stage} aria-current={project.lifecycleStage === stage ? "step" : undefined}>{canReview ? <button type="button" aria-pressed={project.lifecycleStage === stage} aria-label={`${current === stage ? "查看" : "回看"}${label}阶段`} onClick={() => onStageChange?.(stage)}>{label}</button> : <span>{label}</span>}</li>;
         })}
       </ol>
     </div>

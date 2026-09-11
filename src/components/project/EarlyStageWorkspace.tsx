@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { AppIcon } from "@/src/components/ui/app-icon";
-import { IconArrowRight, IconCheck, IconClose, IconRename } from "@/src/lib/icons";
+import { IconArrowRight, IconCheck, IconClose, IconFileText, IconRename } from "@/src/lib/icons";
 import { getEarlyStageBrief, isHistoricalEarlyStage } from "@/src/data/early-stage-demo";
-import type { EarlyStageKey, Project, ProjectLifecycleStage } from "@/src/types";
+import type { EarlyStageKey, Project, ProjectLifecycleStage, SourceAnchor } from "@/src/types";
 import "./early-stage.css";
 
-export function EarlyStageWorkspace({ project, manager, onAdvanceStage, onSave }: {
+export function EarlyStageWorkspace({ project, manager, onAdvanceStage, onSave, onViewSource }: {
   project: Project;
   manager: boolean;
   onAdvanceStage?: (stage: ProjectLifecycleStage) => void;
   onSave?: (stage: EarlyStageKey, values: Record<string, string>) => void;
+  onViewSource?: (source: SourceAnchor) => void;
 }) {
   const brief = getEarlyStageBrief(project);
   const historical = isHistoricalEarlyStage(project);
@@ -42,6 +43,7 @@ export function EarlyStageWorkspace({ project, manager, onAdvanceStage, onSave }
     </dl>
     <div className="ic-early-stage-footer">
       <p className="ic-early-stage-note" role="status">{notice || brief.evidenceNote}</p>
+      {onViewSource && <button type="button" className="ic-overview-source" onClick={() => onViewSource({ document: `${project.name} · ${brief.title}（演示记录）`, page: "阶段快照", paragraph: brief.completedAt ?? "当前记录", excerpt: `版本：${historical ? "归档 V1" : "工作记录 V1"}\n日期：${brief.completedAt ?? project.updatedAt}\n处理状态：${historical ? "演示归档" : "待项目经理核实"}\n${brief.sections.map((section) => `${section.label}：${section.value}`).join("\n")}` })}><AppIcon icon={IconFileText} size={13} />阶段依据</button>}
       {!historical && <div className="ic-early-stage-actions">
         {editing ? <><button type="button" className="ic-overview-button" onClick={() => setEditing(false)}><AppIcon icon={IconClose} size={12} />取消</button>
           <button type="button" className="ic-early-stage-action" disabled={!canSave} onClick={save}><AppIcon icon={IconCheck} size={12} />保存记录</button></> : <>

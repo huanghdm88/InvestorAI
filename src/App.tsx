@@ -69,10 +69,11 @@ import {
 import { cn, isListedConversation, uid } from "@/src/lib/utils";
 import { buildQuestionFollowUp, buildQuestionProcess, buildQuestionResult, consumeQuestionDraft } from "@/src/lib/question-context";
 import { buildManagerTaskProcess, buildManagerTaskResult, buildManagerTaskChoice, getManagerTaskIntent } from "@/src/lib/manager-tasks";
+import { getStageToolIntent } from "@/src/lib/stage-tools";
 import { buildReportRevision, getDiligenceReportReviews, getSelectedReportSource, type ReportReviewDecision } from "@/src/lib/report-review";
 import { applyReportSubmission, type ReportSubmissionRequest, type ReportSubmissionResult } from "@/src/lib/report-submission";
 import type { ReportSourceRef } from "@/src/types";
-import { advanceProjectStage, applyDecisionAction, persistProjectWorkflow, restoreProjectWorkflow, selectProjectStage, snapshotTask } from "@/src/lib/decision-workspace";
+import { advanceProjectStage, applyDecisionAction, persistProjectWorkflow, previewProjectStage, restoreProjectWorkflow, selectProjectStage, snapshotTask } from "@/src/lib/decision-workspace";
 import {
   appendDiligenceNotification,
   isBeforeDiligence,
@@ -143,6 +144,17 @@ type AgentIntent =
   | "challenge"
   | "investment-report"
   | "ambiguous";
+
+type PersonalReportReviewState = { decisions: Record<string, ReportReviewDecision>; versions: ProjectReportEntry[] };
+const EMPTY_REPORT_REVIEW: PersonalReportReviewState = { decisions: {}, versions: [] };
+const conversationOwner = (conversation: Conversation) => conversation.ownerRole ?? "investment-director";
+const personalWorkspaceKey = (role: AuthRole, projectId: string, stage: ProjectLifecycleStage = "diligence") => `${role}:${projectId}:${stage}`;
+
+function reportStage(entry: ProjectReportEntry, conversations: Conversation[]): ProjectLifecycleStage {
+  return ("projectStage" in entry.block ? entry.block.projectStage : undefined)
+    ?? conversations.find((conversation) => conversation.id === entry.conversationId)?.projectStage
+    ?? "diligence";
+}
 
 const XL_VIEWPORT_QUERY = "(min-width: 1280px)";
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "invest-wise.sidebar-collapsed";
@@ -343,13 +355,24 @@ function App() {
   // 默认从项目主页进入
   const [view, setView] = useState<ViewMode>(capturePreview?.view ?? "project-home");
 
-  const [generating, setGenerating] = useState(false);
+  const [generatingConversationIds, setGeneratingConversationIds] = useState<Set<string>>(() => new Set());
+  const setConversationGenerating = useCallback((conversationId: string, value: boolean) => {
+    setGeneratingConversationIds((previous) => {
+      const next = new Set(previous);
+      if (value) next.add(conversationId);
+      else next.delete(conversationId);
+      return next;
+    });
+  }, []);
+  const setGenerating = (value: boolean) => {
+    if (currentConversationId) setConversationGenerating(currentConversationId, value);
+  };
   const [composerReset, setComposerReset] = useState<{ conversationId: string; key: string } | null>(null);
-  const [managerHomeDrafts, setManagerHomeDrafts] = useState<Record<string, { text: string; attachments: MessageAttachment[] }>>({});
-  const homeDraftKey = `${authSession?.role ?? "investment-director"}:${currentProjectId}`;
+  const [managerHomeDrafts, setManagerHomeDrafts] = useState<Record<string, { text: string; attachments: MessageAttachment[]; questionContext?: QuestionContext }>>({});
   const [managerReferenceFile, setManagerReferenceFile] = useState<KnowledgeFile | null>(null);
   const [assistantActivationKey, setAssistantActivationKey] = useState(0);
-  const [reportReviewState, setReportReviewState] = useState<{ decisions: Record<string, ReportReviewDecision>; versions: ProjectReportEntry[] }>({ decisions: {}, versions: [] });
+  const [assistantDraftRevision, setAssistantDraftRevision] = useState(0);
+  const [reportReviewsByScope, setReportReviewsByScope] = useState<Record<string, PersonalReportReviewState>>({});
   const [selectedReportIds, setSelectedReportIds] = useState<Record<string, string>>({});
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(getInitialSidebarCollapsed);
@@ -489,7 +512,7 @@ function App() {
     if (capturePreview.overlay === "report") {
       const reports = extractConversationReports(
         capturePreview.projectId,
-        mockConversations
+        mockConversations.filter((conversation) => conversationOwner(conversation) === capturePreview.role)
       );
       const preferred =
         reports.find((item) => item.block.kind === "diligence-report") ??
@@ -542,10 +565,27 @@ function App() {
     [projects, currentProjectId]
   );
 
-  const currentConversation = useMemo(
-    () => conversations.find((c) => c.id === currentConversationId) ?? null,
-    [conversations, currentConversationId]
+  const activeRole = authSession?.role ?? "investment-director";
+  const currentStage = currentProject?.lifecycleStage ?? "diligence";
+  const homeDraftKey = personalWorkspaceKey(activeRole, currentProjectId, currentStage);
+  const reportReviewState = reportReviewsByScope[homeDraftKey] ?? EMPTY_REPORT_REVIEW;
+  const personalConversations = useMemo(
+    () => conversations.filter((conversation) => conversationOwner(conversation) === activeRole),
+    [conversations, activeRole]
   );
+
+  const currentConversation = useMemo(
+    () => personalConversations.find((c) => c.id === currentConversationId) ?? null,
+    [personalConversations, currentConversationId]
+  );
+  const generating = Boolean(currentConversation && generatingConversationIds.has(currentConversation.id));
+
+  useEffect(() => {
+    if (currentConversationId && !currentConversation) {
+      setCurrentConversationId(null);
+      setView("project-home");
+    }
+  }, [currentConversationId, currentConversation]);
 
   const localizedProjects = useMemo(
     () => localizeProjects(projects, locale),
@@ -553,13 +593,15 @@ function App() {
   );
 
   const localizedConversations = useMemo(
-    () => localizeConversations(conversations, locale),
-    [conversations, locale]
+    () => localizeConversations(personalConversations, locale),
+    [personalConversations, locale]
   );
 
   const localizedRunningTasks = useMemo(
-    () => localizeRunningTasks(runningTasks, locale),
-    [locale, runningTasks]
+    () => localizeRunningTasks(runningTasks.filter((task) => (task.taskSnapshot?.userRole
+      ?? conversations.find((conversation) => conversation.id === task.conversationId)?.ownerRole
+      ?? "investment-director") === activeRole), locale),
+    [locale, runningTasks, conversations, activeRole]
   );
 
   const localizedCurrentProject = useMemo(
@@ -601,8 +643,9 @@ function App() {
     localizedCurrentConversation?.followUpTasks ?? [];
 
   const projectReports = useMemo(
-    () => [...extractConversationReports(currentProjectId, localizedConversations), ...reportReviewState.versions.filter((entry) => entry.projectId === currentProjectId)],
-    [currentProjectId, localizedConversations, reportReviewState.versions]
+    () => [...extractConversationReports(currentProjectId, localizedConversations)
+      .filter((entry) => reportStage(entry, localizedConversations) === currentStage), ...reportReviewState.versions.filter((entry) => entry.projectId === currentProjectId)],
+    [currentProjectId, currentStage, localizedConversations, reportReviewState.versions]
   );
 
   const handleReportReviewDecision = (key: string, decision: ReportReviewDecision | null) => {
@@ -614,25 +657,29 @@ function App() {
     if (!item) return;
     const id = uid("report-revision");
     const createdAt = new Date().toISOString();
-    setReportReviewState((previous) => {
-      if ((previous.decisions[key] ?? null) === decision) return previous;
+    setReportReviewsByScope((allScopes) => {
+      const previous = allScopes[homeDraftKey] ?? EMPTY_REPORT_REVIEW;
+      if ((previous.decisions[key] ?? null) === decision) return allScopes;
       const decisions = { ...previous.decisions };
       if (decision) decisions[key] = decision;
       else delete decisions[key];
       const saveRevision = "sourceReport" in item && (decision === "accepted" || previous.decisions[key] === "accepted");
       const revision: ProjectReportEntry | undefined = saveRevision ? { id, projectId: item.projectId, source: "manager-revision", createdAt, block: buildReportRevision(item.sourceReport, items, decisions) } : undefined;
-      return { decisions, versions: revision ? [revision, ...previous.versions] : previous.versions };
+      return { ...allScopes, [homeDraftKey]: { decisions, versions: revision ? [revision, ...previous.versions] : previous.versions } };
     });
   };
 
-  const activeReportSourceFor = (projectId: string) => {
+  const activeReportSourceFor = (projectId: string, role: AuthRole = activeRole) => {
     const project = projects.find((item) => item.id === projectId);
     if (project?.lifecycleStage === "decided") return project.decision?.approvedReport;
-    return project ? getSelectedReportSource(project, [...extractConversationReports(projectId, conversations), ...reportReviewState.versions], selectedReportIds[projectId]) : undefined;
+    const scopeKey = personalWorkspaceKey(role, projectId, project?.lifecycleStage);
+    const ownedConversations = conversations.filter((conversation) => conversationOwner(conversation) === role);
+    const reports = extractConversationReports(projectId, ownedConversations).filter((entry) => reportStage(entry, ownedConversations) === (project?.lifecycleStage ?? "diligence"));
+    return project ? getSelectedReportSource(project, [...reports, ...(reportReviewsByScope[scopeKey]?.versions ?? [])], selectedReportIds[scopeKey]) : undefined;
   };
-  const taskSnapshotFor = (projectId: string) => {
+  const taskSnapshotFor = (projectId: string, role: AuthRole = activeRole) => {
     const project = projects.find((item) => item.id === projectId);
-    return project ? snapshotTask(project, authSession?.role, activeReportSourceFor(projectId)) : undefined;
+    return project ? snapshotTask(project, role, activeReportSourceFor(projectId, role)) : undefined;
   };
 
   const handleOpenReport = useCallback(
@@ -746,7 +793,7 @@ function App() {
   const renameConversation = (id: string, newTitle: string) => {
     setConversations((prev) =>
       prev.map((c) =>
-        c.id === id ? { ...c, title: newTitle, updatedAt: new Date().toISOString() } : c
+        c.id === id && conversationOwner(c) === activeRole ? { ...c, title: newTitle, updatedAt: new Date().toISOString() } : c
       )
     );
   };
@@ -755,19 +802,21 @@ function App() {
     if (!currentConversationId) return;
     setConversations((previous) => {
       const conversation = previous.find((item) => item.id === currentConversationId);
-      if (!conversation || (conversation.draftText ?? "") === text) return previous;
+      if (!conversation || conversationOwner(conversation) !== activeRole || (conversation.draftText ?? "") === text) return previous;
       return previous.map((item) => item.id === currentConversationId
         ? { ...item, draftText: text, updatedAt: new Date().toISOString() }
         : item);
     });
-  }, [currentConversationId]);
+  }, [currentConversationId, activeRole]);
 
   const consumeConversationDraft = (conversationId: string) => {
-    setConversations((previous) => consumeQuestionDraft(previous, conversationId));
+    setConversations((previous) => previous.some((conversation) => conversation.id === conversationId && conversationOwner(conversation) !== activeRole)
+      ? previous : consumeQuestionDraft(previous, conversationId));
     setComposerReset({ conversationId, key: uid("sent-draft") });
   };
 
   const deleteConversation = (id: string) => {
+    if (!personalConversations.some((conversation) => conversation.id === id)) return;
     runningTasks
       .filter((task) => task.conversationId === id)
       .forEach((task) => cancelTaskLifecycle(task.id));
@@ -790,7 +839,7 @@ function App() {
       const createdAt = new Date().toISOString();
       setConversations((prev) =>
         prev.map((conversation) => {
-          if (conversation.id !== currentConversationId) return conversation;
+          if (conversation.id !== currentConversationId || conversationOwner(conversation) !== activeRole) return conversation;
           const followUpTasks = conversation.followUpTasks ?? [];
           if (
             followUpTasks.some(
@@ -819,7 +868,7 @@ function App() {
       );
       setSettingsOpen(true);
     },
-    [currentConversationId]
+    [currentConversationId, activeRole]
   );
 
   const handleCloseValidationFollowUpTask = useCallback(
@@ -829,7 +878,7 @@ function App() {
       const closedAt = new Date().toISOString();
       setConversations((prev) =>
         prev.map((conversation) => {
-          if (conversation.id !== currentConversationId) return conversation;
+          if (conversation.id !== currentConversationId || conversationOwner(conversation) !== activeRole) return conversation;
           const followUpTasks = conversation.followUpTasks ?? [];
           if (!followUpTasks.some((task) => task.id === taskId && task.status === "open")) {
             return conversation;
@@ -846,7 +895,7 @@ function App() {
         })
       );
     },
-    [currentConversationId]
+    [currentConversationId, activeRole]
   );
 
   const appendMessage = useCallback((conversationId: string, msg: ChatMessage) => {
@@ -870,11 +919,13 @@ function App() {
   };
 
   /** 为指定项目创建一个空的临时对话，并切到对话视图 */
-  const createEmptyConversationFor = (projectId: string, draftText = "", questionContext?: QuestionContext, draftAttachments: MessageAttachment[] = []) => {
+  const createEmptyConversationFor = (projectId: string, draftText = "", questionContext?: QuestionContext, draftAttachments: MessageAttachment[] = [], ownerRole: AuthRole = activeRole, projectStage = projects.find((project) => project.id === projectId)?.lifecycleStage ?? "diligence") => {
     const convId = uid("conv");
     const newConv: Conversation = {
       id: convId,
       projectId,
+      ownerRole,
+      projectStage,
       title: "新对话",
       messages: [],
       createdAt: new Date().toISOString(),
@@ -893,9 +944,9 @@ function App() {
   };
 
   /** 打开或复用该项目下的草稿对话 */
-  const openOrCreateDraftFor = (projectId: string) => {
+  const openOrCreateDraftFor = (projectId: string, ownerRole: AuthRole = activeRole, projectStage = projects.find((project) => project.id === projectId)?.lifecycleStage ?? "diligence") => {
     const existingDraft = conversations.find(
-      (c) => c.projectId === projectId && c.isDraft && !c.draftText?.trim() && !c.draftAttachments?.length && !c.questionContext && c.messages.length === 0
+      (c) => c.projectId === projectId && conversationOwner(c) === ownerRole && (c.projectStage ?? "diligence") === projectStage && c.isDraft && !c.draftText?.trim() && !c.draftAttachments?.length && !c.questionContext && c.messages.length === 0
     );
     if (existingDraft) {
       setCurrentProjectId(projectId);
@@ -903,7 +954,7 @@ function App() {
       activateConversation();
       return existingDraft.id;
     }
-    return createEmptyConversationFor(projectId);
+    return createEmptyConversationFor(projectId, "", undefined, [], ownerRole, projectStage);
   };
 
   /** 点击侧边栏的项目「名称」→ 打开项目主页 */
@@ -918,6 +969,9 @@ function App() {
   };
 
   const changeAuthRole = (role: AuthRole) => {
+    setValidationCanvas(null);
+    setPendingTask(null);
+    setMobileSidebarOpen(false);
     setAuthSession({ authenticated: true, role });
     if (role === "committee-lead") {
       const selected = projects.find((project) => project.id === currentProjectId);
@@ -961,7 +1015,7 @@ function App() {
   };
 
   const handleOpenConversation = (id: string) => {
-    const conv = conversations.find((c) => c.id === id);
+    const conv = personalConversations.find((c) => c.id === id);
     if (!conv) return;
     setCurrentProjectId(conv.projectId);
     setCurrentConversationId(id);
@@ -972,7 +1026,7 @@ function App() {
   // —— Agent 能力识别 ——
   const detectIntent = (text: string, userRole = authSession?.role): AgentIntent => {
     if (!text.trim()) return "ambiguous";
-    return userRole === "committee-lead" ? "investment-report" : getManagerTaskIntent(text);
+    return getStageToolIntent(text) ?? (userRole === "committee-lead" ? "investment-report" : getManagerTaskIntent(text));
   };
 
   /** 判断项目知识库是否仍在解析中 */
@@ -1002,9 +1056,13 @@ function App() {
     taskSnapshot?: TaskSnapshot
   ) => {
     userRole = taskSnapshot?.userRole ?? userRole;
+    const targetConversation = conversations.find((conversation) => conversation.id === conversationId);
+    if (targetConversation && conversationOwner(targetConversation) !== (userRole ?? activeRole)) return;
+    taskSnapshot = taskSnapshot ?? taskSnapshotFor(projectId, userRole ?? activeRole);
     if (taskSnapshot) reportSource = taskSnapshot.reportSource;
     const isChallenge = kind === "challenge";
     const managerTask = userRole === "investment-director";
+    const stageToolTask = Boolean(getStageToolIntent(displayQuery));
     const isInvestmentReport = kind === "investment-report";
     const hasUploadedDocument = attachments.length > 0;
     const isYaojuMaterial = attachments.some((file) => /曜矩/.test(file.name)) && /曜矩/.test(projects.find((item) => item.id === projectId)?.name ?? "");
@@ -1028,7 +1086,7 @@ function App() {
         : buildGenericFactCheckBlock(userQuery);
     const process = questionContext
       ? buildQuestionProcess(questionContext)
-      : (managerTask || project?.lifecycleStage === "decided") && project ? buildManagerTaskProcess(project, kind)
+      : (managerTask || stageToolTask || project?.lifecycleStage === "decided") && project ? buildManagerTaskProcess(project, kind)
       : isYaojuInvestmentDemo
       ? buildYaojuInvestmentProcess(demoSelection?.agentIds.length)
       : isYaojuCrossValidationDemo
@@ -1045,6 +1103,7 @@ function App() {
 
     const task: RunningTask = {
       id: uid("task"),
+      taskSnapshot,
       projectId,
       conversationId,
       kind,
@@ -1080,8 +1139,8 @@ function App() {
           : undefined,
       demoAgentIds: demoSelection?.agentIds,
       demoReworkAgentId: demoSelection?.reworkAgentId,
-      durationMs: questionContext || managerTask ? 8_000 : isYaojuDemo ? 96_000 : undefined,
-      resultBlocks: questionContext ? buildQuestionResult(displayQuery, questionContext) : (managerTask || project?.lifecycleStage === "decided") && project ? buildManagerTaskResult(project, kind, displayQuery, attachments, reportSource) : [resultBlock],
+      durationMs: questionContext || managerTask || stageToolTask ? 8_000 : isYaojuDemo ? 96_000 : undefined,
+      resultBlocks: questionContext ? buildQuestionResult(displayQuery, questionContext) : (managerTask || stageToolTask || project?.lifecycleStage === "decided") && project ? buildManagerTaskResult(project, kind, displayQuery, attachments, reportSource) : [resultBlock],
     };
     setRunningTasks((prev) => [task, ...prev]);
   };
@@ -1097,8 +1156,10 @@ function App() {
     taskSnapshot?: TaskSnapshot
   ) => {
     const snapshotProjectId = conversations.find((c) => c.id === conversationId)?.projectId ?? currentProjectId;
-    taskSnapshot = taskSnapshot ?? taskSnapshotFor(snapshotProjectId);
+    taskSnapshot = taskSnapshot ?? taskSnapshotFor(snapshotProjectId, userRole ?? activeRole);
     userRole = taskSnapshot?.userRole ?? userRole;
+    const targetConversation = conversations.find((conversation) => conversation.id === conversationId);
+    if (targetConversation && conversationOwner(targetConversation) !== (userRole ?? activeRole)) return;
     const intent = text.trim().length > 0 ? (questionContext ? "challenge" : detectIntent(text, userRole)) : "ambiguous";
     const userMsg: ChatMessage = {
       id: uid("m"),
@@ -1139,7 +1200,7 @@ function App() {
     }
 
     // ambiguous → 待确认
-    setGenerating(true);
+    setConversationGenerating(conversationId, true);
     setTimeout(() => {
       const pickMsg: ChatMessage = {
         id: uid("m"),
@@ -1170,7 +1231,7 @@ function App() {
         ],
       };
       appendMessage(conversationId, pickMsg);
-      setGenerating(false);
+      setConversationGenerating(conversationId, false);
     }, 700);
   };
 
@@ -1183,6 +1244,7 @@ function App() {
     attachments: MessageAttachment[],
     questionContext?: QuestionContext
   ) => {
+    if (conversations.some((conversation) => conversation.id === conversationId && conversationOwner(conversation) !== activeRole)) return;
     const projectId = conversations.find((conversation) => conversation.id === conversationId)?.projectId ?? currentProjectId;
     setQueuedPrompts((previous) => [
       ...previous,
@@ -1205,11 +1267,12 @@ function App() {
     const trimmed = text.trim();
     if (!trimmed) return;
     setQueuedPrompts((previous) =>
-      previous.map((item) => (item.id === id ? { ...item, text: trimmed } : item))
+      previous.map((item) => (item.id === id && (item.taskSnapshot?.userRole ?? item.userRole ?? "investment-director") === activeRole ? { ...item, text: trimmed } : item))
     );
   };
 
   const deleteQueuedPrompt = (id: string) => {
+    if (!queuedPrompts.some((item) => item.id === id && (item.taskSnapshot?.userRole ?? item.userRole ?? "investment-director") === activeRole)) return;
     cancelledQueuedPromptIdsRef.current.add(id);
     setQueuedPrompts((previous) => previous.filter((item) => item.id !== id));
   };
@@ -1220,11 +1283,11 @@ function App() {
       return;
     }
 
-    if (generating || queuedPrompts.length === 0) return;
+    if (queuedPrompts.length === 0) return;
     const activeConversationIds = new Set(runningTasks.map((task) => task.conversationId));
     // 队列是用户看到的执行顺序，严格只看队首，避免跨会话跳过等待中的指令。
     const nextPrompt = queuedPrompts[0];
-    if (!nextPrompt || activeConversationIds.has(nextPrompt.conversationId)) return;
+    if (!nextPrompt || generatingConversationIds.has(nextPrompt.conversationId) || activeConversationIds.has(nextPrompt.conversationId)) return;
 
     queueDispatchScheduledRef.current = nextPrompt.id;
     setQueuedPrompts((previous) => previous.filter((item) => item.id !== nextPrompt.id));
@@ -1245,7 +1308,7 @@ function App() {
         nextPrompt.taskSnapshot
       );
     }, 0);
-  }, [generating, queuedPrompts, runningTasks]);
+  }, [generatingConversationIds, queuedPrompts, runningTasks]);
 
   /**
    * 项目主页输入：先识别意图。若是任务类输入且项目正在解析，先弹窗；
@@ -1258,10 +1321,13 @@ function App() {
   ) => {
     const projectId = currentProjectId;
     const trimmed = text.trim();
+    const homeQuestionContext = managerHomeDrafts[homeDraftKey]?.questionContext?.projectId === projectId
+      ? managerHomeDrafts[homeDraftKey]?.questionContext
+      : undefined;
     if (!trimmed && attachments.length === 0) return false;
 
     if (trimmed.length > 0) {
-      const intent = detectIntent(text);
+      const intent = homeQuestionContext ? "challenge" : detectIntent(text);
       if (
         intent !== "ambiguous" &&
         isProjectParsing(projectId)
@@ -1270,6 +1336,7 @@ function App() {
           id: uid("m"),
           role: "user",
           text,
+          questionContext: homeQuestionContext,
           attachments: attachments.length > 0 ? attachments : undefined,
           mode: intent,
           createdAt: new Date().toISOString(),
@@ -1278,7 +1345,7 @@ function App() {
           kind: intent,
           conversationId: null, // 「继续」时再 openOrCreateDraftFor
           projectId,
-          userQuery: text,
+          userQuery: buildQuestionFollowUp(text, homeQuestionContext),
           taskSnapshot: taskSnapshotFor(projectId),
           attachments,
           userMsg,
@@ -1291,13 +1358,13 @@ function App() {
     const conversationBusy =
       generating || runningTasks.some((task) => task.conversationId === convId);
     if (conversationBusy && (trimmed.length > 0 || attachments.length > 0)) {
-      enqueuePrompt(convId, text, attachments);
-      setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: "", attachments: [] } }));
+      enqueuePrompt(convId, text, attachments, homeQuestionContext);
+      setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: "", attachments: [], questionContext: undefined } }));
       return true;
     }
 
-    sendInConversation(convId, text, attachments);
-    setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: "", attachments: [] } }));
+    sendInConversation(convId, text, attachments, homeQuestionContext);
+    setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: "", attachments: [], questionContext: undefined } }));
     return true;
   };
 
@@ -1305,7 +1372,7 @@ function App() {
     text: string,
     attachments: Array<{ name: string; size: string; kind: FileKind }>
   ) => {
-    if (!currentConversationId || (!text.trim() && attachments.length === 0)) return false;
+    if (!currentConversationId || !currentConversation || (!text.trim() && attachments.length === 0)) return false;
     const projectId = currentProjectId;
     const trimmed = text.trim();
     const questionContext = currentConversation?.questionContext?.projectId === projectId
@@ -1361,7 +1428,7 @@ function App() {
     originalQuery: string,
     attachments: MessageAttachment[] = []
   ) => {
-    if (!currentConversationId) return;
+    if (!currentConversationId || !currentConversation) return;
     const choice = currentConversation?.messages.find((msg) => msg.id === _msgId)?.blocks?.find((block) => block.kind === "mode-pick");
     const taskSnapshot = choice?.kind === "mode-pick" ? choice.taskSnapshot ?? taskSnapshotFor(currentProjectId) : taskSnapshotFor(currentProjectId);
     const permittedMode: Exclude<AgentIntent, "ambiguous"> =
@@ -1397,7 +1464,7 @@ function App() {
     values: Record<string, string>,
     followUp?: AssistantBlock[]
   ) => {
-    if (!currentConversationId) return;
+    if (!currentConversationId || !currentConversation) return;
 
     if (followUp && followUp.length > 0) {
       const dilution = values["dilution"] || "30";
@@ -1414,7 +1481,7 @@ function App() {
         ],
       };
       appendMessage(currentConversationId, ackMsg);
-      setGenerating(true);
+      setConversationGenerating(currentConversationId, true);
       const targetId = currentConversationId;
       setTimeout(() => {
         const reportMsg: ChatMessage = {
@@ -1424,7 +1491,7 @@ function App() {
           blocks: followUp,
         };
         appendMessage(targetId, reportMsg);
-        setGenerating(false);
+        setConversationGenerating(targetId, false);
       }, 1400);
       return;
     }
@@ -1479,7 +1546,7 @@ function App() {
       if (item.id !== request.projectId) return item;
       return applyReportSubmission(item, request, authSession.role, id, at).project ?? item;
     }));
-    if (request.stage === "diligence") setSelectedReportIds((previous) => ({ ...previous, [request.projectId]: result.file.id }));
+    if (request.stage === "diligence") setSelectedReportIds((previous) => ({ ...previous, [personalWorkspaceKey(activeRole, request.projectId, request.stage)]: result.file.id }));
     return result;
   };
 
@@ -1585,6 +1652,8 @@ function App() {
    */
   const handleCancelTask = useCallback(
     (task: RunningTask) => {
+      const owner = task.taskSnapshot?.userRole ?? conversations.find((conversation) => conversation.id === task.conversationId)?.ownerRole ?? "investment-director";
+      if (owner !== activeRole) return;
       cancelTaskLifecycle(task.id);
       taskCompletionRef.current.add(task.id);
       setValidationCanvas((current) => {
@@ -1645,7 +1714,7 @@ function App() {
         ],
       });
     },
-    [appendMessage, cancelTaskLifecycle]
+    [appendMessage, cancelTaskLifecycle, activeRole, conversations]
   );
 
   useEffect(() => {
@@ -1883,7 +1952,20 @@ function App() {
         {committeeView && localizedCurrentProject ? (
           <CommitteeWorkspace
             role={authSession.role}
-            onStageChange={(stage) => setProjects((previous) => previous.map((project) => project.id === currentProjectId ? selectProjectStage(project, stage, authSession.role) : project))}
+            onStageChange={(stage) => {
+              setProjects((previous) => previous.map((project) => project.id === currentProjectId ? selectProjectStage(project, stage, authSession.role) : project));
+              setCurrentConversationId(null);
+              setOpenReport(null);
+              setViewerAnchor(null);
+              setView("project-home");
+            }}
+            onPreviewStage={(stage) => {
+              setProjects((previous) => previous.map((project) => project.id === currentProjectId ? previewProjectStage(project, stage, authSession.role) : project));
+              setCurrentConversationId(null);
+              setOpenReport(null);
+              setViewerAnchor(null);
+              setView("project-home");
+            }}
             onAdvanceStage={handleAdvanceProjectStage}
             onEarlyStageSave={(stage, values) => {
               if (authSession.role !== "investment-director") return;
@@ -1905,7 +1987,7 @@ function App() {
             reviewDecisions={reportReviewState.decisions}
             onReviewDecision={handleReportReviewDecision}
             onSubmitReport={handleSubmitReport}
-            onCurrentReportChange={(id) => setSelectedReportIds((previous) => previous[currentProjectId] === id ? previous : { ...previous, [currentProjectId]: id })}
+            onCurrentReportChange={(id) => setSelectedReportIds((previous) => previous[homeDraftKey] === id ? previous : { ...previous, [homeDraftKey]: id })}
             currentConversationId={currentConversationId}
             conversationOpen={view === "conversation"}
             assistantActivationKey={assistantActivationKey}
@@ -1939,11 +2021,40 @@ function App() {
             onDraftTask={(text, file) => {
               setOpenReport(null);
               const files = file ? Array.isArray(file) ? file : [file] : [];
-              createEmptyConversationFor(currentProjectId, text, undefined, files.map((item) => ({ name: item.name, size: item.size, kind: item.kind })));
+              const attachments = files.map((item) => ({ name: item.name, size: item.size, kind: item.kind }));
+              const appendText = (draft = "") => draft.trim() ? `${draft}\n${text}` : text;
+              const appendAttachments = (existing: MessageAttachment[] = []) => [...existing, ...attachments.filter((file) => !existing.some((item) => item.name === file.name && item.size === file.size && item.kind === file.kind))];
+              if (currentConversation) {
+                setConversations((previous) => previous.map((conversation) => conversation.id === currentConversation.id && conversationOwner(conversation) === activeRole
+                  ? { ...conversation, draftText: appendText(conversation.draftText), draftAttachments: appendAttachments(conversation.draftAttachments) }
+                  : conversation));
+              } else {
+                setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: {
+                  text: appendText(previous[homeDraftKey]?.text),
+                  attachments: appendAttachments(previous[homeDraftKey]?.attachments),
+                  questionContext: previous[homeDraftKey]?.questionContext,
+                } }));
+              }
+              setAssistantDraftRevision((revision) => revision + 1);
+              setAssistantActivationKey((key) => key + 1);
             }}
             onAsk={(context) => {
               if (context.projectId !== currentProjectId) return;
-              createEmptyConversationFor(currentProjectId, "", context);
+              if (currentConversation) {
+                setConversations((previous) => previous.map((conversation) => conversation.id === currentConversation.id && conversationOwner(conversation) === activeRole
+                  ? { ...conversation, questionContext: context }
+                  : conversation));
+              } else {
+                setManagerHomeDrafts((previous) => ({
+                  ...previous,
+                  [homeDraftKey]: {
+                    text: previous[homeDraftKey]?.text ?? "",
+                    attachments: previous[homeDraftKey]?.attachments ?? [],
+                    questionContext: context,
+                  },
+                }));
+              }
+              setAssistantActivationKey((key) => key + 1);
             }}
             assistantContent={
                 <MessageList
@@ -1967,7 +2078,7 @@ function App() {
             composerContent={(actions) =>
                 <ChatComposer
                   toolbarActions={actions}
-                  key={`${authSession.role}:${currentProjectId}:${currentConversationId ?? "home"}`}
+                  key={`${homeDraftKey}:${currentConversationId ?? "home"}:${assistantDraftRevision}`}
                   onSend={currentConversationId ? handleSend : handleSendFromHome}
                   generating={generating}
                   onStop={() => {
@@ -1980,22 +2091,35 @@ function App() {
                   className="manager-composer"
                   allowProjectMaterials={authSession.role === "investment-director" && localizedCurrentProject.files.some((file) => file.status === "indexed")}
                   allowQueueWhileGenerating={authSession.role === "investment-director"}
-                  questionContext={currentConversation?.questionContext}
+                  questionContext={currentConversationId ? currentConversation?.questionContext : managerHomeDrafts[homeDraftKey]?.questionContext}
                   onViewSource={handleViewSource}
-                  onRemoveQuestionContext={() => setConversations((previous) => previous.map((item) =>
-                    item.id === currentConversationId ? { ...item, questionContext: undefined } : item
-                  ))}
+                  onRemoveQuestionContext={() => {
+                    if (currentConversationId) {
+                      setConversations((previous) => previous.map((item) =>
+                        item.id === currentConversationId && conversationOwner(item) === activeRole ? { ...item, questionContext: undefined } : item
+                      ));
+                    } else {
+                      setManagerHomeDrafts((previous) => ({
+                        ...previous,
+                        [homeDraftKey]: {
+                          text: previous[homeDraftKey]?.text ?? "",
+                          attachments: previous[homeDraftKey]?.attachments ?? [],
+                          questionContext: undefined,
+                        },
+                      }));
+                    }
+                  }}
                   initialDraft={currentConversationId ? currentConversation?.draftText : managerHomeDrafts[homeDraftKey]?.text ?? ""}
                   initialAttachments={currentConversationId ? currentConversation?.draftAttachments : managerHomeDrafts[homeDraftKey]?.attachments}
                   referenceAttachment={authSession.role === "investment-director" ? managerReferenceFile : null}
                   onReferenceAttachmentConsumed={() => setManagerReferenceFile(null)}
                   onAttachmentsChange={(attachments) => {
-                    if (currentConversationId) setConversations((previous) => previous.map((item) => item.id === currentConversationId ? { ...item, draftAttachments: attachments } : item));
-                    else setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: previous[homeDraftKey]?.text ?? "", attachments } }));
+                    if (currentConversationId) setConversations((previous) => previous.map((item) => item.id === currentConversationId && conversationOwner(item) === activeRole ? { ...item, draftAttachments: attachments } : item));
+                    else setManagerHomeDrafts((previous) => ({ ...previous, [homeDraftKey]: { text: previous[homeDraftKey]?.text ?? "", attachments, questionContext: previous[homeDraftKey]?.questionContext } }));
                   }}
                   resetKey={composerReset?.conversationId === currentConversationId ? composerReset.key : undefined}
-                  onDraftTextChange={currentConversationId ? handleCommitteeDraftTextChange : (text) => setManagerHomeDrafts((previous) => previous[homeDraftKey]?.text === text ? previous : ({ ...previous, [homeDraftKey]: { text, attachments: previous[homeDraftKey]?.attachments ?? [] } }))}
-                  draftStorageKey={`invest-wise:${authSession.role}-draft:${currentProjectId}:${currentConversationId ?? "new"}`}
+                  onDraftTextChange={currentConversationId ? handleCommitteeDraftTextChange : (text) => setManagerHomeDrafts((previous) => previous[homeDraftKey]?.text === text ? previous : ({ ...previous, [homeDraftKey]: { text, attachments: previous[homeDraftKey]?.attachments ?? [], questionContext: previous[homeDraftKey]?.questionContext } }))}
+                  draftStorageKey={`invest-wise:${homeDraftKey}-draft:${currentConversationId ?? "new"}`}
                   showAttachmentDivider={false}
                   queuedPrompts={queuedPrompts.filter((prompt) => prompt.conversationId === currentConversationId)}
                   onEditQueuedPrompt={updateQueuedPrompt}
@@ -2238,9 +2362,10 @@ function App() {
             const t = pendingTask;
             setPendingTask(null);
             // 若来自项目主页首次提问，此时才创建草稿对话；否则使用已有对话
-            const convId = t.conversationId ?? openOrCreateDraftFor(t.projectId);
+            if (t.taskSnapshot?.userRole && t.taskSnapshot.userRole !== activeRole) return;
+            const convId = t.conversationId ?? openOrCreateDraftFor(t.projectId, t.taskSnapshot?.userRole, t.taskSnapshot?.project.lifecycleStage);
             consumeConversationDraft(convId);
-            if (!t.conversationId) setManagerHomeDrafts((previous) => ({ ...previous, [`${t.taskSnapshot?.userRole ?? authSession?.role}:${t.projectId}`]: { text: "", attachments: [] } }));
+            if (!t.conversationId) setManagerHomeDrafts((previous) => ({ ...previous, [personalWorkspaceKey(t.taskSnapshot?.userRole ?? activeRole, t.projectId, t.taskSnapshot?.project.lifecycleStage)]: { text: "", attachments: [] } }));
             activateConversation();
             if (t.userMsg) {
               appendMessage(convId, t.userMsg);
