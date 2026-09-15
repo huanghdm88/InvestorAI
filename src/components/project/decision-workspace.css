@@ -4,8 +4,6 @@
 .decision-digit { display: inline-block; height: 1.2em; width: .62em; overflow: hidden; vertical-align: top; }
 .decision-digit-track { display: block; width: 100%; }
 .decision-digit-track > span { display: block; height: 1.2em; line-height: 1.2em; text-align: center; }
-.ic-stage-steps button { padding: 3px 7px; border-radius: var(--wz-radius-sm); text-decoration: underline; text-decoration-color: #ccc; text-underline-offset: 4px; }
-.ic-stage-steps button:hover, .ic-stage-steps button[aria-pressed="true"] { background: var(--wz-color-bg-subtle); color: var(--wz-color-text-primary); text-decoration: none; }
 .decision-workspace { font-size: 14px; }
 .decision-workspace > section { margin-top: 34px; }
 .decision-baseline-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 24px; border: 1px solid var(--wz-color-border-default); border-radius: var(--wz-radius-lg); background: var(--wz-color-bg-subtle); }

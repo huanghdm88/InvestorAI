@@ -382,10 +382,15 @@
 
 .wz-sheet-overlay[data-state='closed'] {
   animation: wz-overlay-out var(--wz-duration-normal) var(--wz-ease-standard);
+  pointer-events: none;
 }
 
 .wz-sheet-content[data-side='right'][data-state='open'] {
   animation: wz-sheet-right-in var(--wz-duration-normal) var(--wz-ease-standard);
+}
+
+.wz-sheet-content[data-state='closed'] {
+  pointer-events: none;
 }
 
 .wz-sheet-content[data-side='right'][data-state='closed'] {
@@ -419,6 +424,7 @@
 
 .wz-confirm-overlay[data-state='closed'] {
   animation: wz-overlay-out var(--wz-duration-normal) var(--wz-ease-standard);
+  pointer-events: none;
 }
 
 .wz-confirm-content[data-state='open'] {

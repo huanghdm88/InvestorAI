@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ManagerReportPanel, createManagerReportDraft, type ManagerReportDraft } from "./ManagerReportPanel";
 import { ProjectChangesPanel } from "./ProjectChangesPanel";
 import { CommitteeAnalysisQuestions } from "./CommitteeAnalysisQuestions";
@@ -262,24 +263,25 @@ export function CommitteeWorkspace({
   }, [composerOpen, isDirectory]);
 
   useEffect(() => {
-    if (isDirectory || !composerRef.current) return;
+    if (isDirectory || !workareaRef.current) return;
     const root = document.documentElement;
-    const updateDockSpace = () => {
-      const dock = composerOpen ? composerRef.current : assistantTriggerRef.current;
-      if (!dock) return;
-      const bottom = parseFloat(getComputedStyle(composerOpen ? dock : dock.closest(".composer-launcher-position")!).bottom) || 20;
-      root.style.setProperty("--project-assistant-height", `${dock.offsetHeight + bottom + 12}px`);
+    const updateWorkareaBounds = () => {
+      const rect = workareaRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      root.style.setProperty("--project-workarea-left", `${rect.left}px`);
+      root.style.setProperty("--project-workarea-width", `${rect.width}px`);
     };
-    updateDockSpace();
-    const observer = new ResizeObserver(updateDockSpace);
-    observer.observe(composerRef.current);
-    window.addEventListener("resize", updateDockSpace);
+    updateWorkareaBounds();
+    const observer = new ResizeObserver(updateWorkareaBounds);
+    observer.observe(workareaRef.current);
+    window.addEventListener("resize", updateWorkareaBounds);
     return () => {
       observer.disconnect();
-      window.removeEventListener("resize", updateDockSpace);
-      root.style.removeProperty("--project-assistant-height");
+      window.removeEventListener("resize", updateWorkareaBounds);
+      root.style.removeProperty("--project-workarea-left");
+      root.style.removeProperty("--project-workarea-width");
     };
-  }, [composerOpen, isDirectory]);
+  }, [isDirectory, sidebarCollapsed]);
 
   useEffect(() => {
     setSection("overview");
@@ -576,7 +578,7 @@ export function CommitteeWorkspace({
             </div>
           )}
         </main>}
-        {!isDirectory && <>
+        {!isDirectory && createPortal(<>
           <div id="project-floating-composer" ref={composerRef} className="ic-manager-composer" hidden={!composerPresent} inert={!composerOpen} aria-hidden={!composerOpen} onKeyDown={(event) => {
             if (event.key !== "Escape" || event.defaultPrevented || event.nativeEvent.isComposing) return;
             event.preventDefault(); event.stopPropagation(); collapseAssistant();
@@ -588,7 +590,7 @@ export function CommitteeWorkspace({
               </button>
             </div>
           </div>
-        </>}
+        </>, document.body)}
         </div>
       </div>
 

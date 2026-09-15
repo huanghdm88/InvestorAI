@@ -24,9 +24,16 @@ const SheetPortal = DialogPrimitive.Portal;
 
 function SheetOverlay({ ref }: React.ComponentPropsWithRef<"div">) {
   const { open, modal } = React.useContext(SheetContext);
-  const className = "wz-sheet-overlay fixed inset-0 z-[var(--wz-z-overlay)] bg-[var(--wz-color-bg-overlay)]";
+  const className = cn(
+    "wz-sheet-overlay fixed inset-0 z-[var(--wz-z-overlay)] bg-[var(--wz-color-bg-overlay)]",
+    !open && "pointer-events-none",
+  );
   // Radix omits non-modal overlays; retain the backdrop for workspace drawers.
-  if (!modal) return <div ref={ref} data-slot="sheet-overlay" data-state={open ? "open" : "closed"} aria-hidden="true" className={className} />;
+  // Closed backdrops must not stay hittable: browsers retarget those clicks to the focused control.
+  if (!modal) {
+    if (!open) return null;
+    return <div ref={ref} data-slot="sheet-overlay" data-state="open" className={className} />;
+  }
   return (
     <DialogPrimitive.Overlay
       ref={ref}

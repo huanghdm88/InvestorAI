@@ -202,7 +202,7 @@ export function CommitteeOverview({
         </div>
         <dl className="ic-overview-project-state">
           <div><dt>融资阶段</dt><dd>{identity.round}</dd></div>
-          <div><dt>{isPreview ? "演示阶段" : project.currentLifecycleStage && project.currentLifecycleStage !== project.lifecycleStage ? "回看阶段" : "当前状态"}</dt><dd className="ic-stage-value"><ProjectStageTrack key={project.id} project={project} manager={showCurrentFocus} onStageChange={onStageChange} /></dd></div>
+          <div><dt>{isPreview ? "演示阶段" : project.currentLifecycleStage && project.currentLifecycleStage !== project.lifecycleStage ? "回看阶段" : "当前状态"}</dt><dd className="ic-stage-value"><ProjectStageTrack project={project} manager={showCurrentFocus} onStageChange={onStageChange} /></dd></div>
         </dl>
         <p className="ic-overview-description">{brief.description}</p>
         {!isEarlyStage && !isLateStage && <><div className="ic-overview-agenda">

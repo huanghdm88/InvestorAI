@@ -14,7 +14,7 @@ export function createComposerMinimizeTween(target: gsap.TweenTarget, onMinimize
       opacity: 0, duration: 0.32, ease: "power2.inOut" }, 0,
   );
   if (launcher) animation.fromTo(launcher, { opacity: 0, y: 10, scale: 0.88 },
-    { opacity: 1, y: 0, scale: 1, duration: 0.2, ease: "power2.out" }, 0.12);
+    { opacity: 1, y: 0, scale: 1, duration: 0.2, ease: "power2.out", immediateRender: true }, 0);
   return animation;
 }
 
