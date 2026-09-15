@@ -6,6 +6,7 @@ import { CommitteeAnalysisQuestions } from "./CommitteeAnalysisQuestions";
 import { getPendingProjectChanges } from "@/src/lib/project-changes";
 import { ConversationHistory, hasVisibleConversation } from "./ConversationHistory";
 import { DecisionWorkspacePanel } from "./DecisionWorkspacePanel";
+import { ComposerMorphIcon } from "./ComposerMorphIcon";
 import { useComposerMinimize } from "./useComposerMinimize";
 import type { DecisionAction } from "@/src/types/decision";
 import type { ReportSubmissionRequest, ReportSubmissionResult } from "@/src/lib/report-submission";
@@ -32,7 +33,6 @@ import {
   IconFileText,
   IconFolderOpen,
   IconMenu,
-  IconMessage,
   IconHistory,
   IconPlus,
   IconSearch,
@@ -582,11 +582,11 @@ export function CommitteeWorkspace({
           <div id="project-floating-composer" ref={composerRef} className="ic-manager-composer" hidden={!composerPresent} inert={!composerOpen} aria-hidden={!composerOpen} onKeyDown={(event) => {
             if (event.key !== "Escape" || event.defaultPrevented || event.nativeEvent.isComposing) return;
             event.preventDefault(); event.stopPropagation(); collapseAssistant();
-          }}><div ref={composerSurfaceRef} className="ic-manager-composer-inner"><div className="ic-manager-composer-content">{composer}</div><button type="button" className="composer-minimize-action" aria-label="收起输入框" title="收起输入框" onClick={collapseAssistant}><AppIcon icon={IconChevronDown} size={14} /></button></div></div>
+          }}><div ref={composerSurfaceRef} className="ic-manager-composer-inner"><div className="ic-manager-composer-content">{composer}</div></div><button type="button" className="composer-minimize-action" data-icon="down" aria-label="收起输入框" title="收起输入框" onClick={collapseAssistant}><ComposerMorphIcon open={composerOpen} size={14} /></button></div>
           <div className="composer-launcher-position" inert={composerOpen} aria-hidden={composerOpen}>
             <div ref={launcherSurfaceRef} className="composer-launcher-surface">
               <button ref={assistantTriggerRef} type="button" className="composer-launcher" aria-label="展开项目助手" title="展开项目助手" aria-expanded={composerOpen} aria-controls="project-floating-composer" tabIndex={composerOpen ? -1 : 0} onClick={openAssistant}>
-                <AppIcon icon={IconMessage} size={20} />
+                <ComposerMorphIcon open={composerOpen} size={20} />
               </button>
             </div>
           </div>

@@ -88,13 +88,15 @@
 .has-floating-composer > .ic-shell-main { padding-bottom: calc(var(--manager-composer-height, 160px) + 40px); scroll-padding-bottom: calc(var(--manager-composer-height, 160px) + 40px); }
 .has-floating-composer > .ic-manager-conversation { padding-bottom: calc(var(--manager-composer-height, 160px) + 40px); }
 .has-composer-launcher > .ic-shell-main, .has-composer-launcher > .ic-manager-conversation { padding-bottom: calc(96px + env(safe-area-inset-bottom)); scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
-.composer-launcher-position { position: fixed; z-index: calc(var(--wz-z-dialog) + 100); bottom: max(20px, env(safe-area-inset-bottom)); left: calc(var(--project-workarea-left, 0px) + var(--project-workarea-width, 100vw) / 2); transform: translateX(-50%); width: max-content; max-width: calc(var(--project-workarea-width, 100vw) - 32px); }
+.composer-launcher-position { position: fixed; z-index: calc(var(--wz-z-dialog) + 100); bottom: max(20px, env(safe-area-inset-bottom)); left: calc(var(--project-workarea-left, 0px) + var(--project-workarea-width, 100vw) / 2); transform: translateX(-50%); width: max-content; max-width: calc(var(--project-workarea-width, 100vw) - 32px); transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0s; }
 .composer-launcher-position[inert],
 .composer-launcher-position[aria-hidden="true"] {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 320ms;
 }
+.composer-morph-icon { display: block; overflow: visible; }
 .ic-manager-composer[inert],
 .ic-manager-composer[aria-hidden="true"] {
   pointer-events: none;
@@ -108,9 +110,12 @@
 .ic-manager-composer[hidden] { display: none; }
 .ic-manager-composer-inner { position: relative; transform-origin: 50% 100%; padding-bottom: 28px; }
 .ic-manager-composer-content { max-height: 52dvh; overflow-y: auto; border: 1px solid var(--wz-color-border-default); border-radius: calc(var(--wz-radius-lg) * 3); padding: 6px 14px 8px; background: var(--wz-color-bg-surface); box-shadow: var(--wz-shadow-md); }
-.composer-minimize-action { position: absolute; bottom: 0; left: 50%; margin-left: -22px; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 28px; border: 0; border-radius: var(--wz-radius-full); background: transparent; color: var(--wz-color-text-secondary); cursor: pointer; transition: color 150ms ease, transform 150ms ease; }
+.composer-minimize-action { position: absolute; bottom: 0; left: 50%; margin-left: -22px; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 28px; overflow: visible; border: 0; border-radius: var(--wz-radius-full); background: transparent; color: var(--wz-color-text-secondary); cursor: pointer; transition: color 150ms ease, transform 150ms ease; }
 .composer-minimize-action::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 22px; margin-top: -11px; border: 1px solid #e0e0e3; border-radius: inherit; background: var(--wz-color-bg-surface); box-shadow: var(--wz-shadow-sm); transition: background-color 150ms ease; }
-.composer-minimize-action > .anticon { position: relative; }
+.composer-minimize-action > .anticon,
+.composer-minimize-action > .composer-morph-icon { position: relative; display: block; }
+.composer-launcher { overflow: visible; }
+.composer-launcher > .composer-morph-icon { display: block; }
 .composer-minimize-action:hover { color: var(--wz-color-text-primary); }
 .composer-minimize-action:hover::before { background: var(--wz-color-bg-subtle); }
 .composer-minimize-action:active { transform: scale(.92); }
@@ -154,7 +159,7 @@
 @media (pointer: coarse) { .manager-review-list button, .manager-review-handled summary { min-height: 44px; } }
 @media (pointer: coarse) { .ic-manager-composer-inner { padding-bottom: 44px; } .composer-minimize-action { height: 44px; } }
 @media (prefers-reduced-motion: reduce) {
-  .composer-launcher, .composer-minimize-action, .composer-minimize-action::before { transition: none; }
+  .composer-launcher, .composer-minimize-action, .composer-minimize-action::before, .composer-launcher-position { transition: none; }
   .composer-launcher:hover, .composer-launcher:active, .composer-minimize-action:active { transform: none; }
   .manager-report-evidence-panel { transition: opacity 100ms ease; }
   .manager-report-evidence-toggle .anticon { transition: none; }

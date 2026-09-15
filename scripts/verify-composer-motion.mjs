@@ -60,6 +60,11 @@ try {
   assert.ok(css.includes("transform-origin: 50% 100%"));
   assert.ok(css.includes(".composer-launcher-position") && css.includes(".has-composer-launcher"), "The launcher has its own centered placement and reading clearance");
   assert.ok(shell.includes('inert={composerOpen} aria-hidden={composerOpen}') && shell.includes('tabIndex={composerOpen ? -1 : 0}'), "Only the active composer surface participates in keyboard navigation");
+  assert.ok(shell.includes("<ComposerMorphIcon open={composerOpen}"), "Minimize/expand uses Morphicons rather than swapping static icons");
+  assert.ok(shell.includes('ic-manager-composer-content">{composer}</div></div><button type="button" className="composer-minimize-action"'), "Minimize control sits outside the GSAP surface so the morph stays readable");
+  assert.ok(css.includes("visibility 0s linear 320ms"), "Launcher hide is delayed so the expand morph can play");
+  const morph = await read("components/project/ComposerMorphIcon.tsx");
+  assert.ok(morph.includes("ChevronDown") && morph.includes("MessageCircle") && morph.includes('spring="snappy"') && morph.includes('overflow="visible"'), "Composer toggle morphs chevron into chat with Morphicons spring physics");
   assert.ok(review.indexOf("window.setTimeout") < review.indexOf("if (!items.length) return null"));
   assert.ok(review.includes("}, 4000)") && review.includes("window.clearTimeout(timeout)"), "Feedback timeout resets and cleans up on replacement/unmount");
   assert.ok(review.includes("noticeHovered || noticeFocused") && review.includes("onPointerLeave") && review.includes("onBlur"), "The undo action does not expire under pointer or keyboard interaction");

@@ -15,6 +15,6 @@ export default defineConfig({
     // Ant Design icons are imported from the package entrypoint and are
     // discovered by Vite automatically; the optional icon packages are no
     // longer part of the runtime.
-    include: ["@ant-design/icons"],
+    include: ["@ant-design/icons", "lucide", "morphicons/react"],
   },
 });
